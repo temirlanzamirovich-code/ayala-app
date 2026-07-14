@@ -617,29 +617,65 @@
         });
 
         // Используем стабильную модель gemini-1.5-flash
-        const modelName = 'gemini-1.5-flash';
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+       // === НАЧАЛО БЛОКА GROQ И КОНВЕРТАЦИИ ИСТОРИИ ===
+// Пересобираем историю сообщений из формата Gemini в формат Groq/OpenAI
+const groqMessages = [{ role: "system", content: SYSTEM_PROMPT }];
+chatHistory.forEach(item => {
+    groqMessages.push({
+        role: item.role === 'model' ? 'assistant' : 'user',
+        content: item.parts[0].text
+    });
+});
 
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    systemInstruction: {
-                        parts: [{ text: SYSTEM_PROMPT }]
-                    },
-                    contents: chatHistory
-                })
-            });
+let aiText = "";
+try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('gemini_api_key')}`
+        },
+        body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: groqMessages
+        })
+    });
 
-            const responseData = await response.json();
-            
-            let currentLoading = document.getElementById('loadingPlaceholder');
-            if (currentLoading) { currentLoading.remove(); }
+    const responseData = await response.json();
 
-            if (response.ok && responseData.candidates && responseData.candidates.length > 0) {
-                let aiText = responseData.candidates[0].content.parts[0].text;
-                
+    // Убираем анимацию загрузки
+    let currentLoading = document.getElementById('loadingPlaceholder');
+    if (currentLoading) { currentLoading.remove(); }
+
+    if (response.ok && responseData.choices && responseData.choices.length > 0) {
+        aiText = responseData.choices[0].message.content;
+    } else {
+        aiText = "Ошибка сервера Groq: " + (responseData.error ? responseData.error.message : "Неизвестная ошибка");
+    }
+} catch (error) {
+    let currentLoading = document.getElementById('loadingPlaceholder');
+    if (currentLoading) { currentLoading.remove(); }
+    aiText = "Ошибка сети: " + error.message;
+}
+// === КОНЕЦ БЛОКА GROQ ===
+
+        const responseData = await response.json();
+
+        // Убираем анимацию загрузки (как в твоем исходном коде)
+        let currentLoading = document.getElementById('loadingPlaceholder');
+        if (currentLoading) { currentLoading.remove(); }
+
+        if (response.ok && responseData.choices && responseData.choices.length > 0) {
+            aiText = responseData.choices[0].message.content;
+        } else {
+            aiText = "Ошибка сервера Groq: " + (responseData.error ? responseData.error.message : "Неизвестная ошибка");
+        }
+    } catch (error) {
+        let currentLoading = document.getElementById('loadingPlaceholder');
+        if (currentLoading) { currentLoading.remove(); }
+        aiText = "Ошибка сети: " + error.message;
+    }
+    // === КОНЕЦ БЛОКА GROQ ===
                 chatHistory.push({
                     "role": "model", 
                     "parts": [{"text": aiText}]
