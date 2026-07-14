@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayala - Забота о будущих мамах</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f7f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 430px;
+            min-height: 100vh;
+            background-color: #ffffff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .screen { display: none; flex-direction: column; flex-grow: 1; }
+        .screen.active { display: flex; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background-color: #fff;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        .logo { font-size: 24px; font-weight: 800; color: #ff8fa3; letter-spacing: -0.5px; }
+        .lang-switch, .back-btn {
+            background-color: #f0f2f5;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            color: #4e5d6c;
+        }
+
+        /* Главный экран */
+        .welcome-card {
+            background: linear-gradient(135deg, #fff0f3 0%, #ffccd5 100%);
+            margin: 20px;
+            padding: 25px;
+            border-radius: 24px;
+            color: #3d0c11;
+        }
+        .welcome-card h1 { margin: 0 0 10px 0; font-size: 22px; font-weight: 700; }
+        .welcome-card p { margin: 0; font-size: 15px; opacity: 0.8; line-height: 1.4; }
+
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px 30px 20px; }
+        .menu-item {
+            background-color: #f8fafc;
+            border: 1px solid #edf2f7;
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .menu-item:active { transform: scale(0.97); background-color: #f1f5f9; }
+        .icon { font-size: 28px; margin-bottom: 12px; }
+        .menu-item h3 { margin: 0 0 6px 0; font-size: 16px; font-weight: 600; color: #1e293b; }
+        .menu-item p { margin: 0; font-size: 12px; color: #64748b; line-height: 1.3; }
+
+        .menu-item.ai-special {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+            border: none;
+        }
+        .menu-item.ai-special h3 { color: #581c87; }
+        .menu-item.ai-special p { color: #7e22ce; }
+
+        /* ЧАТ */
+        .chat-container { display: flex; flex-direction: column; flex-grow: 1; height: calc(100vh - 71px); }
+        .chat-messages { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-color: #f8fafc; }
+        .message { max-width: 80%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.4; }
+        .message.ai { background-color: #ffffff; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .message.user { background-color: #ff8fa3; color: #ffffff; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .chat-input-area { padding: 15px 20px; background-color: #ffffff; border-top: 1px solid #f0f2f5; display: flex; gap: 10px; }
+        .chat-input { flex-grow: 1; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 24px; outline: none; font-size: 15px; }
+        .send-btn { background-color: #ff8fa3; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+
+        /* КАЛЬКУЛЯТОР */
+        .calc-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-size: 14px; font-weight: 600; color: #4e5d6c; }
+        .calc-input { border: 1px solid #e2e8f0; padding: 14px; border-radius: 16px; font-size: 16px; outline: none; transition: border 0.2s; }
+        .calc-input:focus { border-color: #ff8fa3; }
+        .calc-btn { background-color: #ff8fa3; color: white; border: none; padding: 16px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.1s; }
+        .calc-btn:active { transform: scale(0.98); }
+        .result-card { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; display: none; flex-direction: column; gap: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.01); }
+        .result-row { display: flex; justify-content: space-between; font-size: 15px; color: #4e5d6c; padding-bottom: 8px; border-bottom: 1px dashed #e2e8f0; }
+        .result-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .result-val { font-weight: 700; color: #1e293b; }
+        .result-val.total { color: #ff8fa3; font-size: 18px; }
+
+        /* ЭКРАН СПИСКА В РОДДОМ */
+        .bag-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; overflow-y: auto; height: calc(100vh - 71px); box-sizing: border-box; }
+        .bag-section { background: white; border-radius: 20px; padding: 20px; border: 1px solid #edf2f7; }
+        .bag-section h4 { margin: 0 0 15px 0; font-size: 16px; color: #ff8fa3; font-weight: 700; border-bottom: 2px solid #fff0f3; padding-bottom: 6px; }
+        .checklist-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; cursor: pointer; }
+        .checklist-item:last-child { margin-bottom: 0; }
+        .checklist-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: #ff8fa3; cursor: pointer; }
+        .checklist-item span { font-size: 15px; color: #1e293b; transition: all 0.2s; }
+        .checklist-item input[type="checkbox"]:checked + span { color: #94a3b8; text-decoration: line-through; }
+
+        /* ЭКРАН КАРТЫ */
+        .map-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
+        .map-card { background: white; border-radius: 24px; padding: 20px; border: 1px solid #edf2f7; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .map-card p { font-size: 15px; color: #64748b; margin: 0 0 15px 0; line-height: 1.4; text-align: center; }
+        .city-select { width: 100%; padding: 14px; border-radius: 16px; border: 1px solid #e2e8f0; font-size: 16px; font-weight: 600; color: #1e293b; outline: none; background-color: #fff; cursor: pointer; margin-bottom: 20px; box-sizing: border-box; }
+        .map-search-btn { display: flex; align-items: center; justify-content: space-between; background-color: #ffffff; border: 1px solid #e2e8f0; padding: 18px 20px; border-radius: 20px; cursor: pointer; transition: all 0.2s; margin-bottom: 12px; text-decoration: none; text-align: left; }
+        .map-search-btn:active { transform: scale(0.98); background-color: #f8fafc; }
+        .map-search-btn.gis-style { border-left: 5px solid #00b027; } /* Фирменный зеленый 2ГИС */
+        .btn-info h4 { margin: 0 0 4px 0; font-size: 16px; color: #1e293b; font-weight: 700; }
+        .btn-info p { margin: 0; font-size: 12px; color: #64748b; }
+        .btn-arrow { font-size: 18px; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        
+        <!-- ГЛАВНЫЙ ЭКРАН -->
+        <div id="mainScreen" class="screen active">
+            <header>
+                <div class="logo">ayala</div>
+                <button class="lang-switch" id="langBtn" onclick="toggleLanguage()">ҚАЗ</button>
+            </header>
+
+            <div class="welcome-card">
+                <h1 id="welcomeTitle">Привет, будущая мама!</h1>
+                <p id="welcomeDesc">Твой уютный цифровой помощник на пути к самому главному чуду.</p>
+            </div>
+
+            <div class="menu-grid">
+                <div class="menu-item ai-special" onclick="openScreen('chatScreen')">
+                    <div class="icon">✨</div>
+                    <h3 id="menuAiTitle">Чат с ИИ Аялой</h3>
+                    <p id="menuAiDesc">Задай любой вопрос о беременности, здоровье и уходе за малышом в режиме реального времени.</p>
+                </div>
+
+                <div class="menu-item" onclick="openScreen('calcScreen')">
+                    <div class="icon">🧮</div>
+                    <h3 id="menuCalcTitle">Декретные в РК</h3>
+                    <p id="menuCalcDesc">Рассчитай точный размер пособий по законам Казахстана.</p>
+                </div>
+
+                <div class="menu-item" onclick="openScreen('bagScreen')">
+                    <div class="icon">👜</div>
+                    <h3 id="menuBagTitle">В роддом</h3>
+                    <p id="menuBagDesc">Интерактивный список покупок и вещей для мамы и малыша.</p>
+                </div>
+
+                <div class="menu-item" style="grid-column: span 2;" onclick="openScreen('mapScreen')">
+                    <div class="icon">📍</div>
+                    <h3 id="menuMapTitle">Роддомы и ЖК на карте</h3>
+                    <p id="menuMapDesc">Рейтинги, контакты и честные отзывы из базы 2ГИС в твоем городе.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН ЧАТА С ИИ -->
+        <div id="chatScreen" class="screen">
+            <header>
+                <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
+                <div class="logo" style="font-size: 20px;">ayala.ai</div>
+                <div style="width: 60px;"></div>
+            </header>
+
+            <div class="chat-container">
+                <div class="chat-messages" id="chatBox">
+                    <div class="message ai" id="aiGreeting">
+                        Привет! Менің атым Аяла. Нажми кнопку языка сверху, если хочешь сменить язык. Я готова ответить на любые вопросы о малыше и беременности! 💕
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="userInput" placeholder="Напишите сообщение...">
+                    <button class="send-btn" onclick="sendMessage()">➔</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН КАЛЬКУЛЯТОРА ДЕКРЕТНЫХ -->
+        <div id="calcScreen" class="screen">
+            <header>
+                <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
+                <div class="logo" style="font-size: 18px;" id="calcHeaderTitle">Калькулятор РК</div>
+                <div style="width: 60px;"></div>
+            </header>
+
+            <div class="calc-body">
+                <div class="input-group">
+                    <label id="labelIncome">Среднемесячный доход за 12 месяцев (₸):</label>
+                    <input type="number" class="calc-input" id="incomeInput" placeholder="Например, 250000" min="0">
+                </div>
+
+                <button class="calc-btn" onclick="calculateMaternity()" id="btnCalculate">Рассчитать выплаты</button>
+
+                <div class="result-card" id="resultCard">
+                    <div class="result-row">
+                        <span id="resRow1">Выплата по беременности (на руки):</span>
+                        <span class="result-val total" id="maternityClean">0 ₸</span>
+                    </div>
+                    <div class="result-row">
+                        <span id="resRow2">Удержанный ОПВ (10% пенсионка):</span>
+                        <span class="result-val" id="maternityTax" style="color: #94a3b8;">0 ₸</span>
+                    </div>
+                    <p style="font-size: 11px; color: #94a3b8; margin: 5px 0 0 0; line-height: 1.3;" id="calcDisclaimer">
+                        *Расчет является предварительным и базируется на стандартном коэффициенте 4.2 (126 дней больничного).
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН СПИСКА В РОДДОМ -->
+        <div id="bagScreen" class="screen">
+            <header>
+                <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
+                <div class="logo" style="font-size: 18px;" id="bagHeaderTitle">Сумка в роддом</div>
+                <div style="width: 60px;"></div>
+            </header>
+
+            <div class="bag-body">
+                <div class="bag-section">
+                    <h4 id="catDocs">1. Документы</h4>
+                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Удостоверение личности" data-kk="Жеке куәлік">Удостоверение личности</span></label>
+                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Обменная карта" data-kk="Алмасу картасы">Обменная карта</span></label>
+                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Договор с роддомом (при наличии)" data-kk="Перзентханамен келісімшарт (бар болса)">Договор с роддомом (при наличии)</span></label>
+                </div>
+
+                <div class="bag-section">
+                    <h4 id="catMother">2. Маме</h4>
+                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Халат и ночная рубашка" data-kk="Халат пен түнде киетін көйлек">Халат и ночная рубашка</span></label>
+                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Моющиеся тапочки" data-kk="Жууға болатын тәпішке">Моющиеся тапочки</span></label>
+                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Послеродовые прокладки" data-kk="Босанғаннан кейінгі төсемелер">Послеродовые прокладки</span></label>
+                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Бюстгальтер для кормления" data-kk="Емізуге арналған көкірекше">Бюстгальтер для кормления</span></label>
+                </div>
+
+                <div class="bag-section">
+                    <h4 id="catBaby">3. Малышу</h4>
+                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Подгузники (упаковка newborn)" data-kk="Жөргектіктер (newborn қаптамасы)">Подгузники (упаковка newborn)</span></label>
+                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Влажные салфетки (детские)" data-kk="Ылғалды майлықтар (балаларға арналған)">Влажные салфетки (детские)</span></label>
+                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Боди, слипы и шапочки (3 шт)" data-kk="Боди, слиптер және телпектер (3 дана)">Боди, слипы и шапочки (3 шт)</span></label>
+                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Детское одеяло или плед" data-kk="Балалар көрпесі немесе плед">Детское одеяло или плед</span></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН КАРТЫ -->
+        <div id="mapScreen" class="screen">
+            <header>
+                <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
+                <div class="logo" style="font-size: 18px;" id="mapHeaderTitle">Медицинская карта</div>
+                <div style="width: 60px;"></div>
+            </header>
+
+            <div class="map-body">
+                <div class="map-card">
+                    <p id="mapCardDesc">Выберите ваш город для быстрого поиска ближайших медицинских учреждений с отзывами и рейтингом в 2ГИС:</p>
+                    
+                    <select class="city-select" id="citySelector">
+                        <option value="almaty">Алматы</option>
+                        <option value="astana">Астана</option>
+                        <option value="shymkent">Шымкент</option>
+                        <option value="karaganda">Караганда</option>
+                        <option value="aktobe">Актобе</option>
+                    </select>
+
+                    <div class="map-search-btn gis-style" onclick="openGis('rod')">
+                        <div class="btn-info">
+                            <h4 id="btnGisRoddomTitle">Роддомы</h4>
+                            <p id="btnGisRoddomDesc">Поиск родильных домов и перинатальных центров</p>
+                        </div>
+                        <div class="btn-arrow">➔</div>
+                    </div>
+
+                    <div class="map-search-btn gis-style" onclick="openGis('jk')">
+                        <div class="btn-info">
+                            <h4 id="btnGisJkTitle">Женские консультации</h4>
+                            <p id="btnGisJkDesc">Поиск ЖК и центров планирования семьи</p>
+                        </div>
+                        <div class="btn-arrow">➔</div>
+                    </div>
+
+                    <!-- НОВОЕ: Контейнер для клиник -->
+                    <div id="localClinicsContainer" style="margin-top: 25px; display: none;">
+                        <h4 id="localClinicsTitle" style="margin: 0 0 15px 0; font-size: 16px; color: #ff8fa3; font-weight: 700; border-bottom: 2px solid #fff0f3; padding-bottom: 6px;">
+                            Проверенные клиники в Алматы
+                        </h4>
+                        <div id="clinicsList" style="display: flex; flex-direction: column; gap: 12px;"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    // ==========================================
+    // 1. НАСТРОЙКИ API И СИСТЕМНЫЙ ПРОМПТ
+    // ==========================================
+    
+    const GEMINI_API_KEY = 'YOUR_API_KEY_HERE'; 
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+    const SYSTEM_PROMPT = `Ты — Аяла, умный и заботливый цифровой помощник для будущих мам в Казахстане.
+Твоя миссия: Помогать женщинам на протяжении всей беременности, поддерживать их психологически, предоставлять проверенную информацию о здоровье и ориентироваться в социальной системе Казахстана (декретные выплаты, пособия, права).
+Твой стиль общения: Мягкий, поддерживающий, эмпатичный, но профессиональный. Язык общения зависит от языка пользователя (переключайся между русским и казахским плавно).
+Твои знания: Медицина (доказательная, но ты не врач - направляй к специалистам), контекст РК (выплаты 4.2, законы).
+Безопасность: Никогда не ставь диагнозы. При тревожных симптомах советуй скорую (103) или врача. Не советуй народную медицину.`;
+
+    let chatHistory = []; 
+    let currentLang = 'ru';
+
+    // ==========================================
+    // НОВОЕ: БАЗА ДАННЫХ КЛИНИК И ПЕРЕВОДЫ
+    // ==========================================
+    const clinicsData = {
+        almaty: [
+            {
+                name: "A CLINIC (филиал Ерменсай)",
+                address: "мкр. Ерменсай, улица Арайлы, 12",
+                specialty: "Реабилитация после болезней, прием терапевта и педиатра",
+                schedule: "Пн–Сб: 08:00 – 17:00, Вс: выходной",
+                rating: "3.8",
+                reviews: "31 отзыв",
+                link: "https://2gis.kz/almaty/firm/70000001053702157"
+            },
+            {
+                name: "A CLINIC (филиал Жарокова)",
+                address: "улица Жарокова, 275а",
+                specialty: "Диагностика (УЗИ, ФГДС), реабилитация, стоматология",
+                schedule: "Пн–Вс: 08:00 – 20:00 (без выходных)",
+                rating: "4.0",
+                reviews: "1103 отзыва",
+                link: "https://2gis.kz/almaty/firm/70000001034440532"
+            },
+            {
+                name: "Alatau Assistance (Mediker)",
+                address: "улица Навои, 310 (1 этаж)",
+                specialty: "Семейная медицина, ведение беременности, диагностика",
+                schedule: "Пн–Пт: 08:00 – 19:00, Сб: 08:00 – 14:00, Вс: выходной",
+                rating: "4.4",
+                reviews: "742 отзыва",
+                link: "https://2gis.kz/almaty/firm/70000001031317544"
+            }
+        ]
+    };
+
+    const localTitleTranslations = {
+        ru: "Проверенные клиники в Алматы",
+        kk: "Алматыдағы тексерілген емханалар"
+    };
+
+    // Функция отрисовки клиник
+    function renderLocalClinics() {
+        const city = document.getElementById('citySelector').value;
+        const container = document.getElementById('localClinicsContainer');
+        const list = document.getElementById('clinicsList');
+        const titleEl = document.getElementById('localClinicsTitle');
+
+        if (!container || !list || !titleEl) return;
+
+        titleEl.innerText = localTitleTranslations[currentLang];
+
+        if (clinicsData[city]) {
+            container.style.display = 'block';
+            list.innerHTML = ''; 
+
+            clinicsData[city].forEach(clinic => {
+                const card = document.createElement('div');
+                card.className = 'map-search-btn';
+                card.style.flexDirection = 'column';
+                card.style.alignItems = 'stretch';
+                card.style.gap = '8px';
+                card.style.borderLeft = '5px solid #ff8fa3'; 
+                card.style.textDecoration = 'none';
+
+                card.onclick = () => window.open(clinic.link, '_blank');
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div class="btn-info" style="max-width: 80%;">
+                            <h4 style="margin: 0 0 4px 0; font-size: 15px; color: #1e293b; font-weight: 700;">${clinic.name}</h4>
+                            <p style="margin: 0; font-size: 12px; color: #64748b;">📍 ${clinic.address}</p>
+                        </div>
+                        <div style="text-align: right; min-width: 60px;">
+                            <span style="font-size: 14px; font-weight: bold; color: #ff8fa3;">⭐ ${clinic.rating}</span>
+                            <p style="margin: 2px 0 0 0; font-size: 10px; color: #94a3b8;">${clinic.reviews}</p>
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; color: #4e5d6c; line-height: 1.4; border-top: 1px dashed #f0f2f5; padding-top: 6px;">
+                        <strong>Специализация:</strong> ${clinic.specialty}<br>
+                        <strong>Режим работы:</strong> ${clinic.schedule}
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        } else {
+            container.style.display = 'none';
+        }
+    }
+
+
+    // ==========================================
+    // 2. ДАННЫЕ ЛОКАЛИЗАЦИИ И ИНТЕРФЕЙСА
+    // ==========================================
+
+    const data = {
+        ru: {
+            btn: 'ҚАЗ', back: '← Назад', placeholder: 'Напишите сообщение...',
+            title: 'Привет, будущая мама!', desc: 'Твой уютный цифровой помощник на пути к самому главному чуду.',
+            aiTitle: 'Чат с ИИ Аялой', aiDesc: 'Задай любой вопрос о беременности, здоровье и уходе за малышом в режиме реального времени.',
+            calcTitle: 'Декретные в РК', calcDesc: 'Рассчитай точный размер пособий по законам Казахстана.',
+            bagTitle: 'В роддом', bagDesc: 'Интерактивный список покупок и вещей для мамы и малыша.',
+            mapTitle: 'Роддомы и ЖК на карте', mapDesc: 'Рейтинги, контакты и честные отзывы из базы 2ГИС в твоем городе.',
+            greeting: 'Привет! Менің атым Аяла. Я готова ответить на любые вопросы о малыше, твоем здоровье или декретных выплатах в Казахстане! 💕',
+            calcHead: 'Калькулятор РК', labelInc: 'Среднемесячный доход за 12 месяцев (₸):', btnCalc: 'Рассчитать выплаты',
+            r1: 'Выплата по беременности (на руки):', r2: 'Удержанный ОПВ (10% пенсионка):',
+            disc: '*Расчет является предварительным и базируется на стандартном коэффициенте 4.2 (126 дней больничного).',
+            bagHead: 'Сумка в роддом', cDocs: '1. Документы', cMother: '2. Маме', cBaby: '3. Малышу',
+            mapHead: 'Медицинская карта',
+            mapCard: 'Выберите ваш город для быстрого поиска ближайших медицинских учреждений с отзывами и рейтингом в 2ГИС:',
+            gRodTitle: 'Роддомы', gRodDesc: 'Поиск родильных домов и перинатальных центров',
+            gJkTitle: 'Женские консультации', gJkDesc: 'Поиск ЖК и центров планирования семьи'
+        },
+        kk: {
+            btn: 'РУС', back: '← Артқа', placeholder: 'Хабарлама жазыңыз...',
+            title: 'Сәлем, болашақ ана!', desc: 'Ең басты кереметке барар жолдағы сенің жайлы цифрлық көмекшің.',
+            aiTitle: 'Аяла ИИ чаты', aiDesc: 'Жүктілік, денсаулық және нәресте күтімі туралы кез келген сұрақты нақты уақытта қой.',
+            calcTitle: 'ҚР декреттік төлемдер', calcDesc: 'Қазақстан заңдары бойынша жәрдемақылардың нақты көлемін есепте.',
+            bagTitle: 'Перзентханаға', bagDesc: 'Ана мен балаға арналған заттардың интерактивті тізімі.',
+            mapTitle: 'Перзентханалар мен Емханалар', mapDesc: 'Сенің қалаңдағы 2ГИС базасынан рейтингтер, контактілер мен шынайы пікірлер.',
+            greeting: 'Сәлем! Менің атым Аяла. Мен саған жүктілік, денсаулық немесе Қазақстандағы декреттік төлемдер туралы кез келген сұрақты нақты уақытта қоюға дайынмын! 💕',
+            calcHead: 'ҚР Калькуляторы', labelInc: '12 айдағы орташа айлық табыс (₸):', btnCalc: 'Төлемдерді есептеу',
+            r1: 'Жүктілік бойынша төлем (қолға):', r2: 'Ұсталған МЗЖ (10% зейнетақы):',
+            disc: '*Есептеу алдын ала жүргізілген және 4.2 стандартты коэффициентке (126 күндік еңбекке жарамсыздық парағы) негеделген.',
+            bagHead: 'Перзентхана сөмкесі', cDocs: '1. Құжаттар', cMother: '2. Анаға', cBaby: '3. Балаға',
+            mapHead: 'Медициналық карта',
+            mapCard: 'Жақын маңдағы медициналық мекемелерді пікірлерімен және рейтингімен 2ГИС-тен жылдам іздеу үшін қалаңызды таңдаңыз:',
+            gRodTitle: 'Перзентханалар', gRodDesc: 'Босану үйлері мен перинаталдық орталықтарды іздеу',
+            gJkTitle: 'Әйелдер консультациясы', gJkDesc: 'Әйелдер консультациясы мен отбасын жоспарлау орталықтарын іздеу'
+        }
+    };
+
+    function openScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function toggleLanguage() {
+        currentLang = currentLang === 'ru' ? 'kk' : 'ru';
+        
+        document.getElementById('langBtn').innerText = data[currentLang].btn;
+        document.querySelectorAll('.back-btn').forEach(b => b.innerText = data[currentLang].back);
+        document.getElementById('userInput').placeholder = data[currentLang].placeholder;
+
+        document.getElementById('welcomeTitle').innerText = data[currentLang].title;
+        document.getElementById('welcomeDesc').innerText = data[currentLang].desc;
+        document.getElementById('menuAiTitle').innerText = data[currentLang].aiTitle;
+        document.getElementById('menuAiDesc').innerText = data[currentLang].aiDesc;
+        document.getElementById('menuCalcTitle').innerText = data[currentLang].calcTitle;
+        document.getElementById('menuCalcDesc').innerText = data[currentLang].calcDesc;
+        document.getElementById('menuBagTitle').innerText = data[currentLang].bagTitle;
+        document.getElementById('menuBagDesc').innerText = data[currentLang].bagDesc;
+        document.getElementById('menuMapTitle').innerText = data[currentLang].mapTitle;
+        document.getElementById('menuMapDesc').innerText = data[currentLang].mapDesc;
+        document.getElementById('calcHeaderTitle').innerText = data[currentLang].calcHead;
+        document.getElementById('labelIncome').innerText = data[currentLang].labelInc;
+        document.getElementById('btnCalculate').innerText = data[currentLang].btnCalc;
+        document.getElementById('resRow1').innerText = data[currentLang].r1;
+        document.getElementById('resRow2').innerText = data[currentLang].r2;
+        document.getElementById('calcDisclaimer').innerText = data[currentLang].disc;
+        document.getElementById('bagHeaderTitle').innerText = data[currentLang].bagHead;
+        document.getElementById('catDocs').innerText = data[currentLang].cDocs;
+        document.getElementById('catMother').innerText = data[currentLang].cMother;
+        document.getElementById('catBaby').innerText = data[currentLang].cBaby;
+        
+        // Перевод элементов карты
+        document.getElementById('mapHeaderTitle').innerText = data[currentLang].mapHead;
+        document.getElementById('mapCardDesc').innerText = data[currentLang].mapCard;
+        document.getElementById('btnGisRoddomTitle').innerText = data[currentLang].gRodTitle;
+        document.getElementById('btnGisRoddomDesc').innerText = data[currentLang].gRodDesc;
+        document.getElementById('btnGisJkTitle').innerText = data[currentLang].gJkTitle;
+        document.getElementById('btnGisJkDesc').innerText = data[currentLang].gJkDesc;
+
+        if (chatHistory.length === 0) {
+             document.getElementById('aiGreeting').innerText = data[currentLang].greeting;
+        }
+
+        document.querySelectorAll('.item-text').forEach(el => {
+            el.innerText = el.getAttribute('data-' + currentLang);
+        });
+
+        // НОВОЕ: Переводим заголовок блока клиник при смене языка
+        renderLocalClinics();
+    }
+
+    function calculateMaternity() {
+        let income = parseFloat(document.getElementById('incomeInput').value);
+        if (!income || income < 0) return;
+        let totalDirty = income * 4.2;
+        let tax = totalDirty * 0.10;
+        let totalClean = totalDirty - tax;
+        document.getElementById('maternityClean').innerText = Math.round(totalClean).toLocaleString('ru-RU') + ' ₸';
+        document.getElementById('maternityTax').innerText = Math.round(tax).toLocaleString('ru-RU') + ' ₸';
+        document.getElementById('resultCard').style.display = 'flex';
+    }
+
+    // ==========================================
+    // 3. ОТКРЫТИЕ ПОИСКА В 2ГИС
+    // ==========================================
+    function openGis(type) {
+        const city = document.getElementById('citySelector').value;
+        let query = '';
+        
+        if (type === 'rod') {
+            query = currentLang === 'ru' ? 'Роддомы' : 'Перзентханалар';
+        } else {
+            query = currentLang === 'ru' ? 'Женские консультации' : 'Әйелдер консультациясы';
+        }
+        
+        const url = `https://2gis.kz/${city}/search/${encodeURIComponent(query)}`;
+        window.open(url, '_blank');
+    }
+
+    // ==========================================
+    // 4. МАГИЯ ИИ: ОТПРАВКА ЗАПРОСА К GEMINI
+    // ==========================================
+
+    async function sendMessage() {
+        let input = document.getElementById('userInput');
+        let text = input.value.trim();
+        if(!text) return;
+
+        let chatBox = document.getElementById('chatBox');
+        
+        let userMsg = document.createElement('div');
+        userMsg.className = 'message user';
+        userMsg.innerText = text;
+        chatBox.appendChild(userMsg);
+        
+        input.value = '';
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        let loadingMsg = document.createElement('div');
+        loadingMsg.className = 'message ai';
+        loadingMsg.setAttribute('id', 'loadingPlaceholder');
+        loadingMsg.innerHTML = '<span style="opacity:0.5">Аяла печатает...</span>';
+        chatBox.appendChild(loadingMsg);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        chatHistory.push({
+            "role": "user", 
+            "parts": [{"text": text}]
+        });
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    system_instruction: {
+                        parts: [{ text: SYSTEM_PROMPT }]
+                    },
+                    contents: chatHistory
+                })
+            });
+
+            const responseData = await response.json();
+            
+            let currentLoading = document.getElementById('loadingPlaceholder');
+            if (currentLoading) { currentLoading.remove(); }
+
+            if (response.ok && responseData.candidates && responseData.candidates.length > 0) {
+                let aiText = responseData.candidates[0].content.parts[0].text;
+                
+                chatHistory.push({
+                    "role": "model", 
+                    "parts": [{"text": aiText}]
+                });
+
+                let aiMsg = document.createElement('div');
+                aiMsg.className = 'message ai';
+                aiMsg.innerHTML = aiText.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                chatBox.appendChild(aiMsg);
+            } else {
+                console.error("Ошибка сервера:", responseData);
+                throw new Error(responseData.error?.message || "Ошибка запроса");
+            }
+
+        } catch (error) {
+            console.error("Ошибка API:", error);
+            
+            let currentLoading = document.getElementById('loadingPlaceholder');
+            if (currentLoading) { currentLoading.remove(); }
+            
+            let errorMsg = document.createElement('div');
+            errorMsg.className = 'message ai';
+            errorMsg.innerText = currentLang === 'ru' ? 
+                `Ошибка соединения или неверный API-ключ. Проверь консоль. 😔` : 
+                `Байланыс қатесі немесе қате API-кілт. Консольді тексеріңіз. 😔`;
+            chatBox.appendChild(errorMsg);
+        }
+        
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    document.getElementById('userInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') { sendMessage(); }
+    });
+
+    // ==========================================
+    // НОВОЕ: ЗАПУСК ФУНКЦИЙ КАРТЫ
+    // ==========================================
+    
+    // Следим за переключением города в выпадающем списке
+    document.getElementById('citySelector').addEventListener('change', renderLocalClinics);
+
+    // Запускаем первичную отрисовку клиник при загрузке страницы
+    window.addEventListener('DOMContentLoaded', renderLocalClinics);
+
+    </script>
+</body>
+</html>
