@@ -90,18 +90,19 @@
         .chat-messages { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-color: #f8fafc; }
         .message { max-width: 80%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.4; }
         .message.ai { background-color: #ffffff; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .message.ai a { color: #ff8fa3; font-weight: bold; text-decoration: none; }
         .message.user { background-color: #ff8fa3; color: #ffffff; align-self: flex-end; border-bottom-right-radius: 4px; }
         .chat-input-area { padding: 15px 20px; background-color: #ffffff; border-top: 1px solid #f0f2f5; display: flex; gap: 10px; }
         .chat-input { flex-grow: 1; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 24px; outline: none; font-size: 15px; }
         .send-btn { background-color: #ff8fa3; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
 
-        /* КАЛЬКУЛЯТОР */
-        .calc-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
+        /* КАЛЬКУЛЯТОР И НАСТРОЙКИ */
+        .calc-body, .settings-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
         .input-group { display: flex; flex-direction: column; gap: 8px; }
         .input-group label { font-size: 14px; font-weight: 600; color: #4e5d6c; }
-        .calc-input { border: 1px solid #e2e8f0; padding: 14px; border-radius: 16px; font-size: 16px; outline: none; transition: border 0.2s; }
+        .calc-input { border: 1px solid #e2e8f0; padding: 14px; border-radius: 16px; font-size: 16px; outline: none; transition: border 0.2s; box-sizing: border-box; width: 100%; }
         .calc-input:focus { border-color: #ff8fa3; }
-        .calc-btn { background-color: #ff8fa3; color: white; border: none; padding: 16px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.1s; }
+        .calc-btn { background-color: #ff8fa3; color: white; border: none; padding: 16px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.1s; width: 100%; }
         .calc-btn:active { transform: scale(0.98); }
         .result-card { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; display: none; flex-direction: column; gap: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.01); }
         .result-row { display: flex; justify-content: space-between; font-size: 15px; color: #4e5d6c; padding-bottom: 8px; border-bottom: 1px dashed #e2e8f0; }
@@ -136,11 +137,13 @@
 
     <div class="phone-container">
         
-        <!-- ГЛАВНЫЙ ЭКРАН -->
         <div id="mainScreen" class="screen active">
             <header>
                 <div class="logo">ayala</div>
-                <button class="lang-switch" id="langBtn" onclick="toggleLanguage()">ҚАЗ</button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="lang-switch" onclick="openScreen('settingsScreen')">⚙️</button>
+                    <button class="lang-switch" id="langBtn" onclick="toggleLanguage()">ҚАЗ</button>
+                </div>
             </header>
 
             <div class="welcome-card">
@@ -175,12 +178,29 @@
             </div>
         </div>
 
-        <!-- ЭКРАН ЧАТА С ИИ -->
+        <div id="settingsScreen" class="screen">
+            <header>
+                <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
+                <div class="logo" style="font-size: 18px;" id="settingsHeaderTitle">Настройки</div>
+                <div style="width: 60px;"></div>
+            </header>
+            <div class="settings-body">
+                <div class="input-group">
+                    <label id="labelApiKey" style="font-weight: bold; color: #1e293b;">Ключ API Gemini:</label>
+                    <p style="font-size: 12px; color: #64748b; margin: 0 0 10px 0; line-height: 1.4;" id="settingsDesc">
+                        Для работы чата с искусственным интеллектом требуется персональный API-ключ Gemini. Он сохраняется локально в вашем браузере.
+                    </p>
+                    <input type="password" id="api-key-input" class="calc-input" placeholder="Вставьте ваш API ключ (начинается с AIzaSy...)">
+                </div>
+                <button class="calc-btn" onclick="saveApiKey()" id="btnSaveKey">Сохранить ключ</button>
+            </div>
+        </div>
+
         <div id="chatScreen" class="screen">
             <header>
                 <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
                 <div class="logo" style="font-size: 20px;">ayala.ai</div>
-                <div style="width: 60px;"></div>
+                <button class="lang-switch" onclick="openScreen('settingsScreen')">⚙️</button>
             </header>
 
             <div class="chat-container">
@@ -196,7 +216,6 @@
             </div>
         </div>
 
-        <!-- ЭКРАН КАЛЬКУЛЯТОРА ДЕКРЕТНЫХ -->
         <div id="calcScreen" class="screen">
             <header>
                 <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
@@ -228,7 +247,6 @@
             </div>
         </div>
 
-        <!-- ЭКРАН СПИСКА В РОДДОМ -->
         <div id="bagScreen" class="screen">
             <header>
                 <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
@@ -262,7 +280,6 @@
             </div>
         </div>
 
-        <!-- ЭКРАН КАРТЫ -->
         <div id="mapScreen" class="screen">
             <header>
                 <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
@@ -298,7 +315,6 @@
                         <div class="btn-arrow">➔</div>
                     </div>
 
-                    <!-- НОВОЕ: Контейнер для клиник -->
                     <div id="localClinicsContainer" style="margin-top: 25px; display: none;">
                         <h4 id="localClinicsTitle" style="margin: 0 0 15px 0; font-size: 16px; color: #ff8fa3; font-weight: 700; border-bottom: 2px solid #fff0f3; padding-bottom: 6px;">
                             Проверенные клиники в Алматы
@@ -316,10 +332,6 @@
     // ==========================================
     // 1. НАСТРОЙКИ API И СИСТЕМНЫЙ ПРОМПТ
     // ==========================================
-    
-    const GEMINI_API_KEY = 'AQ.Ab8RN6IljG3O7XI_xQrKmi_yBaOaczr68RsgH3PXAJe7iIr46w'; 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
     const SYSTEM_PROMPT = `Ты — Аяла, умный и заботливый цифровой помощник для будущих мам в Казахстане.
 Твоя миссия: Помогать женщинам на протяжении всей беременности, поддерживать их психологически, предоставлять проверенную информацию о здоровье и ориентироваться в социальной системе Казахстана (декретные выплаты, пособия, права).
 Твой стиль общения: Мягкий, поддерживающий, эмпатичный, но профессиональный. Язык общения зависит от языка пользователя (переключайся между русским и казахским плавно).
@@ -330,7 +342,7 @@
     let currentLang = 'ru';
 
     // ==========================================
-    // НОВОЕ: БАЗА ДАННЫХ КЛИНИК И ПЕРЕВОДЫ
+    // БАЗА ДАННЫХ КЛИНИК
     // ==========================================
     const clinicsData = {
         almaty: [
@@ -369,7 +381,7 @@
         kk: "Алматыдағы тексерілген емханалар"
     };
 
-    // Функция отрисовки клиник
+    // Функция отрисовки локальных клиник
     function renderLocalClinics() {
         const city = document.getElementById('citySelector').value;
         const container = document.getElementById('localClinicsContainer');
@@ -418,11 +430,9 @@
         }
     }
 
-
     // ==========================================
     // 2. ДАННЫЕ ЛОКАЛИЗАЦИИ И ИНТЕРФЕЙСА
     // ==========================================
-
     const data = {
         ru: {
             btn: 'ҚАЗ', back: '← Назад', placeholder: 'Напишите сообщение...',
@@ -439,7 +449,10 @@
             mapHead: 'Медицинская карта',
             mapCard: 'Выберите ваш город для быстрого поиска ближайших медицинских учреждений с отзывами и рейтингом в 2ГИС:',
             gRodTitle: 'Роддомы', gRodDesc: 'Поиск родильных домов и перинатальных центров',
-            gJkTitle: 'Женские консультации', gJkDesc: 'Поиск ЖК и центров планирования семьи'
+            gJkTitle: 'Женские консультации', gJkDesc: 'Поиск ЖК и центров планирования семьи',
+            settHead: 'Настройки', labelKey: 'Ключ API Gemini:',
+            settDesc: 'Для работы чата с искусственным интеллектом требуется персональный API-ключ Gemini. Он сохраняется локально в вашем браузере.',
+            btnSave: 'Сохранить ключ'
         },
         kk: {
             btn: 'РУС', back: '← Артқа', placeholder: 'Хабарлама жазыңыз...',
@@ -451,12 +464,15 @@
             greeting: 'Сәлем! Менің атым Аяла. Мен саған жүктілік, денсаулық немесе Қазақстандағы декреттік төлемдер туралы кез келген сұрақты нақты уақытта қоюға дайынмын! 💕',
             calcHead: 'ҚР Калькуляторы', labelInc: '12 айдағы орташа айлық табыс (₸):', btnCalc: 'Төлемдерді есептеу',
             r1: 'Жүктілік бойынша төлем (қолға):', r2: 'Ұсталған МЗЖ (10% зейнетақы):',
-            disc: '*Есептеу алдын ала жүргізілген және 4.2 стандартты коэффициентке (126 күндік еңбекке жарамсыздық парағы) негеделген.',
+            disc: '*Есептеу алдын ала жүргізілген және 4.2 стандартты коэффициентке (126 күндік еңбекке жарамсыздық парағы) негізделген.',
             bagHead: 'Перзентхана сөмкесі', cDocs: '1. Құжаттар', cMother: '2. Анаға', cBaby: '3. Балаға',
             mapHead: 'Медициналық карта',
             mapCard: 'Жақын маңдағы медициналық мекемелерді пікірлерімен және рейтингімен 2ГИС-тен жылдам іздеу үшін қалаңызды таңдаңыз:',
             gRodTitle: 'Перзентханалар', gRodDesc: 'Босану үйлері мен перинаталдық орталықтарды іздеу',
-            gJkTitle: 'Әйелдер консультациясы', gJkDesc: 'Әйелдер консультациясы мен отбасын жоспарлау орталықтарын іздеу'
+            gJkTitle: 'Әйелдер консультациясы', gJkDesc: 'Әйелдер консультациясы мен отбасын жоспарлау орталықтарын іздеу',
+            settHead: 'Баптаулар', labelKey: 'Gemini API-кілті:',
+            settDesc: 'Жасанды интеллект жұмыс істеуі үшін жеке Gemini API-кілті қажет. Ол браузер жадында сақталады.',
+            btnSave: 'Кілтті сақтау'
         }
     };
 
@@ -501,6 +517,12 @@
         document.getElementById('btnGisJkTitle').innerText = data[currentLang].gJkTitle;
         document.getElementById('btnGisJkDesc').innerText = data[currentLang].gJkDesc;
 
+        // Перевод настроек
+        document.getElementById('settingsHeaderTitle').innerText = data[currentLang].settHead;
+        document.getElementById('labelApiKey').innerText = data[currentLang].labelKey;
+        document.getElementById('settingsDesc').innerText = data[currentLang].settDesc;
+        document.getElementById('btnSaveKey').innerText = data[currentLang].btnSave;
+
         if (chatHistory.length === 0) {
              document.getElementById('aiGreeting').innerText = data[currentLang].greeting;
         }
@@ -509,8 +531,19 @@
             el.innerText = el.getAttribute('data-' + currentLang);
         });
 
-        // НОВОЕ: Переводим заголовок блока клиник при смене языка
         renderLocalClinics();
+    }
+
+    // Сохранение ключа локально
+    function saveApiKey() {
+        const key = document.getElementById('api-key-input').value.trim();
+        if (!key) {
+            alert(currentLang === 'ru' ? 'Пожалуйста, введите ключ' : 'Кілтті енгізіңіз');
+            return;
+        }
+        localStorage.setItem('gemini_api_key', key);
+        alert(currentLang === 'ru' ? 'Ключ успешно сохранен!' : 'Кілт сәтті сақталды!');
+        openScreen('mainScreen');
     }
 
     function calculateMaternity() {
@@ -524,9 +557,7 @@
         document.getElementById('resultCard').style.display = 'flex';
     }
 
-    // ==========================================
-    // 3. ОТКРЫТИЕ ПОИСКА В 2ГИС
-    // ==========================================
+    // Поиск в 2ГИС
     function openGis(type) {
         const city = document.getElementById('citySelector').value;
         let query = '';
@@ -542,9 +573,8 @@
     }
 
     // ==========================================
-    // 4. МАГИЯ ИИ: ОТПРАВКА ЗАПРОСА К GEMINI
+    // 3. ОТПРАВКА ЗАПРОСА К GEMINI API
     // ==========================================
-
     async function sendMessage() {
         let input = document.getElementById('userInput');
         let text = input.value.trim();
@@ -560,6 +590,20 @@
         input.value = '';
         chatBox.scrollTop = chatBox.scrollHeight;
 
+        // Извлекаем ключ из хранилища перед отправкой
+        const apiKey = localStorage.getItem('gemini_api_key');
+        
+        if (!apiKey) {
+            let errorMsg = document.createElement('div');
+            errorMsg.className = 'message ai';
+            errorMsg.innerHTML = currentLang === 'ru' ? 
+                `Пожалуйста, укажите рабочий API-ключ Gemini в <a href="#" onclick="openScreen('settingsScreen'); return false;">настройках ⚙️</a>, чтобы ИИ мог ответить вам.` : 
+                `Жауап алу үшін алдымен <a href="#" onclick="openScreen('settingsScreen'); return false;">баптаулар мәзірінде ⚙️</a> Gemini API-кілтін көрсетіңіз.`;
+            chatBox.appendChild(errorMsg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return;
+        }
+
         let loadingMsg = document.createElement('div');
         loadingMsg.className = 'message ai';
         loadingMsg.setAttribute('id', 'loadingPlaceholder');
@@ -572,12 +616,16 @@
             "parts": [{"text": text}]
         });
 
+        // Используем стабильную модель gemini-1.5-flash
+        const modelName = 'gemini-1.5-flash';
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    system_instruction: {
+                    systemInstruction: {
                         parts: [{ text: SYSTEM_PROMPT }]
                     },
                     contents: chatHistory
@@ -599,15 +647,16 @@
 
                 let aiMsg = document.createElement('div');
                 aiMsg.className = 'message ai';
+                // Форматирование Markdown в HTML
                 aiMsg.innerHTML = aiText.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
                 chatBox.appendChild(aiMsg);
             } else {
-                console.error("Ошибка сервера:", responseData);
-                throw new Error(responseData.error?.message || "Ошибка запроса");
+                console.error("Ошибка API:", responseData);
+                throw new Error(responseData.error?.message || "Неверный запрос");
             }
 
         } catch (error) {
-            console.error("Ошибка API:", error);
+            console.error("Критическая ошибка:", error);
             
             let currentLoading = document.getElementById('loadingPlaceholder');
             if (currentLoading) { currentLoading.remove(); }
@@ -615,8 +664,8 @@
             let errorMsg = document.createElement('div');
             errorMsg.className = 'message ai';
             errorMsg.innerText = currentLang === 'ru' ? 
-                `Ошибка соединения или неверный API-ключ. Проверь консоль. 😔` : 
-                `Байланыс қатесі немесе қате API-кілт. Консольді тексеріңіз. 😔`;
+                `Ошибка соединения или неверный API-ключ. Проверьте настройки. 😔` : 
+                `Байланыс қатесі немесе қате API-кілт. Баптауларды тексеріңіз. 😔`;
             chatBox.appendChild(errorMsg);
         }
         
@@ -627,16 +676,17 @@
         if (e.key === 'Enter') { sendMessage(); }
     });
 
-    // ==========================================
-    // НОВОЕ: ЗАПУСК ФУНКЦИЙ КАРТЫ
-    // ==========================================
-    
-    // Следим за переключением города в выпадающем списке
+    // Обработчик изменения города на карте
     document.getElementById('citySelector').addEventListener('change', renderLocalClinics);
 
-    // Запускаем первичную отрисовку клиник при загрузке страницы
-    window.addEventListener('DOMContentLoaded', renderLocalClinics);
-
+    // Первичная инициализация при загрузке страницы
+    window.addEventListener('DOMContentLoaded', () => {
+        renderLocalClinics();
+        const savedKey = localStorage.getItem('gemini_api_key');
+        if (savedKey) {
+            document.getElementById('api-key-input').value = savedKey;
+        }
+    });
     </script>
 </body>
 </html>
