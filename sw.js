@@ -1,10 +1,15 @@
 // sw.js — Service Worker для Ayala PWA
-const CACHE_NAME = 'ayala-v1';
+const CACHE_NAME = 'ayala-v2';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon.png'];
 
-// Установка: кладём оболочку приложения в кеш
+// Установка: кешируем файлы по отдельности — один недоступный файл
+// больше не рушит установку целиком
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(APP_SHELL)));
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(APP_SHELL.map((url) => cache.add(url)))
+    )
+  );
   self.skipWaiting();
 });
 
@@ -18,7 +23,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Свои файлы — cache-first; API (Gemini/Groq) не трогаем, уходит в сеть
+// Свои файлы — cache-first; запросы к API уходят в сеть
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
