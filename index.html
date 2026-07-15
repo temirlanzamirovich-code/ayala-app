@@ -322,14 +322,14 @@
 
             <div class="calc-body">
                 <div class="input-group">
-                    <label id="labelApiKey">Gemini API Ключ:</label>
-                    <input type="password" class="calc-input" id="api-key-input" placeholder="Вставьте ваш API ключ">
+                    <label id="labelApiKey">Groq API Ключ:</label>
+                    <input type="password" class="calc-input" id="api-key-input" placeholder="Вставьте ваш Groq API ключ (gsk_...)">
                 </div>
 
                 <button class="calc-btn" onclick="saveApiKey()" id="btnSaveKey">Сохранить ключ</button>
                 
                 <p style="font-size: 12px; color: #64748b; line-height: 1.4; margin: 10px 0 0 0;" id="settingsHelp">
-                    Ключ сохраняется локально в вашем браузере (localStorage) и не отправляется на сторонние серверы. Вы можете получить бесплатный ключ на <a href="https://aistudio.google.com/" target="_blank" style="color: #ff8fa3; text-decoration: underline;">Google AI Studio</a>.
+                    Ключ сохраняется локально в вашем браузере (localStorage) и не отправляется на сторонние серверы. Вы можете получить бесплатный ключ на <a href="https://console.groq.com/keys" target="_blank" style="color: #ff8fa3; text-decoration: underline;">Groq Console</a>.
                 </p>
             </div>
         </div>
@@ -350,19 +350,23 @@
         let chatHistory = []; 
         let currentLang = 'ru';
 
+        // Настройки движка Groq (модель легко поменять здесь)
+        const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+        const GROQ_MODEL = 'llama-3.3-70b-versatile';
+
         // Получение ключа из памяти браузера
         function getApiKey() {
-            return localStorage.getItem('gemini_api_key') || '';
+            return localStorage.getItem('groq_api_key') || '';
         }
 
         // Сохранение ключа в память браузера
         function saveApiKey() {
             const key = document.getElementById('api-key-input').value.trim();
             if (key) {
-                localStorage.setItem('gemini_api_key', key);
+                localStorage.setItem('groq_api_key', key);
                 alert(currentLang === 'ru' ? 'Ключ успешно сохранен!' : 'Кілт сәтті сақталды!');
             } else {
-                localStorage.removeItem('gemini_api_key');
+                localStorage.removeItem('groq_api_key');
                 alert(currentLang === 'ru' ? 'Ключ удален из памяти!' : 'Кілт жадтан өшірілді!');
             }
         }
@@ -479,9 +483,9 @@
                 gRodTitle: 'Роддомы', gRodDesc: 'Поиск родильных домов и перинатальных центров',
                 gJkTitle: 'Женские консультации', gJkDesc: 'Поиск ЖК и центров планирования семьи',
                 settingsHead: 'Настройки',
-                labelApi: 'Gemini API Ключ:',
+                labelApi: 'Groq API Ключ:',
                 btnSave: 'Сохранить ключ',
-                settingsHelp: 'Ключ сохраняется локально в вашем браузере (localStorage) и не отправляется на сторонние серверы. Вы можете получить бесплатный ключ на <a href="https://aistudio.google.com/" target="_blank" style="color: #ff8fa3; text-decoration: underline;">Google AI Studio</a>.'
+                settingsHelp: 'Ключ сохраняется локально в вашем браузере (localStorage) и не отправляется на сторонние серверы. Вы можете получить бесплатный ключ на <a href="https://console.groq.com/keys" target="_blank" style="color: #ff8fa3; text-decoration: underline;">Groq Console</a>.'
             },
             kk: {
                 btn: 'РУС', back: '← Артқа', placeholder: 'Хабарлама жазыңыз...',
@@ -500,9 +504,9 @@
                 gRodTitle: 'Перзентханалар', gRodDesc: 'Босану үйлері мен перинаталдық орталықтарды іздеу',
                 gJkTitle: 'Әйелдер консультациясы', gJkDesc: 'Әйелдер консультациясы мен отбасын жоспарлау орталықтарын іздеу',
                 settingsHead: 'Баптаулар',
-                labelApi: 'Gemini API кілті:',
+                labelApi: 'Groq API кілті:',
                 btnSave: 'Кілтті сақтау',
-                settingsHelp: 'Кілт браузеріңізде жергілікті түрде сақталады (localStorage) и үшінші тарап серверлеріне жіберілмейді. Тегін кілтті <a href="https://aistudio.google.com/" target="_blank" style="color: #ff8fa3; text-decoration: underline;">Google AI Studio</a> сайтынан ала аласыз.'
+                settingsHelp: 'Кілт браузеріңізде жергілікті түрде сақталады (localStorage) и үшінші тарап серверлеріне жіберілмейді. Тегін кілтті <a href="https://console.groq.com/keys" target="_blank" style="color: #ff8fa3; text-decoration: underline;">Groq Console</a> сайтынан ала аласыз.'
             }
         };
 
@@ -593,7 +597,7 @@
         }
 
         // ==========================================
-        // 4. МАГИЯ ИИ: ОТПРАВКА ЗАПРОСА К GEMINI
+        // 4. МАГИЯ ИИ: ОТПРАВКА ЗАПРОСА К GROQ
         // ==========================================
 
         // ==========================================
@@ -636,11 +640,15 @@
             }
             if (!Array.isArray(saved) || saved.length === 0) return;
 
-            chatHistory = saved;
-            saved.forEach(item => {
-                const text = (item.parts && item.parts[0]) ? item.parts[0].text : '';
-                renderMessage(item.role, text);
+            // Приводим к формату Groq (на случай старых записей в формате Gemini)
+            chatHistory = saved.map(item => {
+                const role = item.role === 'model' ? 'assistant' : item.role;
+                const content = (typeof item.content === 'string')
+                    ? item.content
+                    : ((item.parts && item.parts[0]) ? item.parts[0].text : '');
+                return { role, content };
             });
+            chatHistory.forEach(item => renderMessage(item.role, item.content));
             const chatBox = document.getElementById('chatBox');
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -691,24 +699,26 @@
                 return;
             }
 
-            // Формируем URL с актуальным ключом и стабильной моделью gemini-1.5-flash
-            const dynamicApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
             chatHistory.push({
-                "role": "user", 
-                "parts": [{"text": text}]
+                "role": "user",
+                "content": text
             });
             saveChatHistory();
 
             try {
-                const response = await fetch(dynamicApiUrl, {
+                const response = await fetch(GROQ_API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
                     body: JSON.stringify({
-                        system_instruction: {
-                            parts: [{ text: SYSTEM_PROMPT }]
-                        },
-                        contents: chatHistory
+                        model: GROQ_MODEL,
+                        messages: [
+                            { role: 'system', content: SYSTEM_PROMPT },
+                            ...chatHistory
+                        ]
                     })
                 });
 
@@ -717,12 +727,12 @@
                 let currentLoading = document.getElementById('loadingPlaceholder');
                 if (currentLoading) { currentLoading.remove(); }
 
-                if (response.ok && responseData.candidates && responseData.candidates.length > 0) {
-                    let aiText = responseData.candidates[0].content.parts[0].text;
-                    
+                if (response.ok && responseData.choices && responseData.choices.length > 0) {
+                    let aiText = responseData.choices[0].message.content;
+
                     chatHistory.push({
-                        "role": "model", 
-                        "parts": [{"text": aiText}]
+                        "role": "assistant",
+                        "content": aiText
                     });
                     saveChatHistory();
 
