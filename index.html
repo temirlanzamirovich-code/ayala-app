@@ -575,49 +575,36 @@
     // ==========================================
     // 3. ОТПРАВКА ЗАПРОСА К GEMINI API
     // ==========================================
-    async function sendMessage() {
-        let input = document.getElementById('userInput');
-        let text = input.value.trim();
-        if(!text) return;
+   async function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const text = messageInput.value.trim();
+    if (!text) return;
 
-        let chatBox = document.getElementById('chatBox');
-        
-        let userMsg = document.createElement('div');
-        userMsg.className = 'message user';
-        userMsg.innerText = text;
-        chatBox.appendChild(userMsg);
-        
-        input.value = '';
-        chatBox.scrollTop = chatBox.scrollHeight;
+    // Очищаем поле ввода
+    messageInput.value = '';
 
-        // Извлекаем ключ из хранилища перед отправкой
-        const apiKey = localStorage.getItem('gemini_api_key');
-        
-        if (!apiKey) {
-            let errorMsg = document.createElement('div');
-            errorMsg.className = 'message ai';
-            errorMsg.innerHTML = currentLang === 'ru' ? 
-                `Пожалуйста, укажите рабочий API-ключ Gemini в <a href="#" onclick="openScreen('settingsScreen'); return false;">настройках ⚙️</a>, чтобы ИИ мог ответить вам.` : 
-                `Жауап алу үшін алдымен <a href="#" onclick="openScreen('settingsScreen'); return false;">баптаулар мәзірінде ⚙️</a> Gemini API-кілтін көрсетіңіз.`;
-            chatBox.appendChild(errorMsg);
-            chatBox.scrollTop = chatBox.scrollHeight;
-            return;
-        }
+    // Выводим сообщение пользователя на экран
+    let userMsg = document.createElement('div');
+    userMsg.className = 'message user';
+    userMsg.innerText = text;
+    chatBox.appendChild(userMsg);
+    chatBox.scrollTop = chatBox.scrollHeight;
 
-        let loadingMsg = document.createElement('div');
-        loadingMsg.className = 'message ai';
-        loadingMsg.setAttribute('id', 'loadingPlaceholder');
-        loadingMsg.innerHTML = '<span style="opacity:0.5">Аяла печатает...</span>';
-        chatBox.appendChild(loadingMsg);
-        chatBox.scrollTop = chatBox.scrollHeight;
+    // Сохраняем в историю в формате Gemini
+    chatHistory.push({
+        "role": "user",
+        "parts": [{"text": text}]
+    });
 
-        chatHistory.push({
-            "role": "user", 
-            "parts": [{"text": text}]
-        });
+    // Показываем анимацию загрузки
+    let loadingMsg = document.createElement('div');
+    loadingMsg.className = 'message ai loading';
+    loadingMsg.id = 'loadingPlaceholder';
+    loadingMsg.innerHTML = '<span>.</span><span>.</span><span>.</span>';
+    chatBox.appendChild(loadingMsg);
+    chatBox.scrollTop = chatBox.scrollHeight;
 
-        // === НАЧАЛО БЛОКА GROQ И КОНВЕРТАЦИИ ИСТОРИИ ===
-    // Пересобираем историю сообщений из формата Gemini в формат Groq/OpenAI
+    // === НАЧАЛО БЛОКА GROQ И КОНВЕРТАЦИИ ИСТОРИИ ===
     const groqMessages = [{ role: "system", content: SYSTEM_PROMPT }];
     chatHistory.forEach(item => {
         groqMessages.push({
@@ -684,4 +671,4 @@
         chatBox.appendChild(errorMsg);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
-} // <--- Эта скобка закрывает функцию sendMessage
+}
