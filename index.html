@@ -596,6 +596,63 @@
         // 4. МАГИЯ ИИ: ОТПРАВКА ЗАПРОСА К GEMINI
         // ==========================================
 
+        // ==========================================
+        // СОХРАНЕНИЕ И ЗАГРУЗКА ИСТОРИИ ЧАТА
+        // ==========================================
+
+        const CHAT_STORAGE_KEY = 'ayala_chat_history';
+
+        // Сохраняем весь массив chatHistory в память браузера
+        function saveChatHistory() {
+            try {
+                localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory));
+            } catch (e) {
+                console.error('Не удалось сохранить историю чата:', e);
+            }
+        }
+
+        // Рисуем одно сообщение в окне чата (в том же стиле, что и живые сообщения)
+        function renderMessage(role, text) {
+            const chatBox = document.getElementById('chatBox');
+            const msg = document.createElement('div');
+            if (role === 'user') {
+                msg.className = 'message user';
+                msg.innerText = text;
+            } else {
+                msg.className = 'message ai';
+                msg.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            }
+            chatBox.appendChild(msg);
+        }
+
+        // Загружаем историю при старте и восстанавливаем сообщения на экране
+        function loadChatHistory() {
+            let saved = null;
+            try {
+                saved = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY));
+            } catch (e) {
+                console.error('История чата повреждена, очищаю:', e);
+                localStorage.removeItem(CHAT_STORAGE_KEY);
+            }
+            if (!Array.isArray(saved) || saved.length === 0) return;
+
+            chatHistory = saved;
+            saved.forEach(item => {
+                const text = (item.parts && item.parts[0]) ? item.parts[0].text : '';
+                renderMessage(item.role, text);
+            });
+            const chatBox = document.getElementById('chatBox');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Очистка истории — пригодится для кнопки "Новый чат"
+        function clearChatHistory() {
+            chatHistory = [];
+            localStorage.removeItem(CHAT_STORAGE_KEY);
+            const chatBox = document.getElementById('chatBox');
+            chatBox.querySelectorAll('.message:not(#aiGreeting)').forEach(el => el.remove());
+        }
+
         async function sendMessage() {
             let input = document.getElementById('userInput');
             let text = input.value.trim();
@@ -641,6 +698,7 @@
                 "role": "user", 
                 "parts": [{"text": text}]
             });
+            saveChatHistory();
 
             try {
                 const response = await fetch(dynamicApiUrl, {
@@ -666,6 +724,7 @@
                         "role": "model", 
                         "parts": [{"text": aiText}]
                     });
+                    saveChatHistory();
 
                     let aiMsg = document.createElement('div');
                     aiMsg.className = 'message ai';
@@ -711,6 +770,7 @@
             if (savedKey) {
                 document.getElementById('api-key-input').value = savedKey;
             }
+            loadChatHistory();
         });
 
     </script>
