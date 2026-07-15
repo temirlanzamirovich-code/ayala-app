@@ -590,7 +590,7 @@
     chatBox.appendChild(userMsg);
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    // Сохраняем в историю в формате Gemini
+    // Сохраняем в историю в формате Gemini (чтобы не ломать совместимость)
     chatHistory.push({
         "role": "user",
         "parts": [{"text": text}]
@@ -635,7 +635,7 @@
         if (response.ok && responseData.choices && responseData.choices.length > 0) {
             let aiText = responseData.choices[0].message.content;
 
-            // Сохраняем в историю в формате Gemini
+            // Сохраняем в историю
             chatHistory.push({
                 "role": "model",
                 "parts": [{ "text": aiText }]
