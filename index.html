@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ayala - Забота о будущих мамах</title>
+<!-- PWA Meta Tags -->
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Ayala">
+<link rel="apple-touch-icon" href="icon.png">
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -90,19 +96,18 @@
         .chat-messages { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-color: #f8fafc; }
         .message { max-width: 80%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.4; }
         .message.ai { background-color: #ffffff; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .message.ai a { color: #ff8fa3; font-weight: bold; text-decoration: none; }
         .message.user { background-color: #ff8fa3; color: #ffffff; align-self: flex-end; border-bottom-right-radius: 4px; }
         .chat-input-area { padding: 15px 20px; background-color: #ffffff; border-top: 1px solid #f0f2f5; display: flex; gap: 10px; }
         .chat-input { flex-grow: 1; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 24px; outline: none; font-size: 15px; }
         .send-btn { background-color: #ff8fa3; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
 
-        /* КАЛЬКУЛЯТОР И НАСТРОЙКИ */
-        .calc-body, .settings-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
+        /* КАЛЬКУЛЯТОР */
+        .calc-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
         .input-group { display: flex; flex-direction: column; gap: 8px; }
         .input-group label { font-size: 14px; font-weight: 600; color: #4e5d6c; }
-        .calc-input { border: 1px solid #e2e8f0; padding: 14px; border-radius: 16px; font-size: 16px; outline: none; transition: border 0.2s; box-sizing: border-box; width: 100%; }
+        .calc-input { border: 1px solid #e2e8f0; padding: 14px; border-radius: 16px; font-size: 16px; outline: none; transition: border 0.2s; }
         .calc-input:focus { border-color: #ff8fa3; }
-        .calc-btn { background-color: #ff8fa3; color: white; border: none; padding: 16px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.1s; width: 100%; }
+        .calc-btn { background-color: #ff8fa3; color: white; border: none; padding: 16px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.1s; }
         .calc-btn:active { transform: scale(0.98); }
         .result-card { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; display: none; flex-direction: column; gap: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.01); }
         .result-row { display: flex; justify-content: space-between; font-size: 15px; color: #4e5d6c; padding-bottom: 8px; border-bottom: 1px dashed #e2e8f0; }
@@ -140,8 +145,8 @@
         <div id="mainScreen" class="screen active">
             <header>
                 <div class="logo">ayala</div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="lang-switch" onclick="openScreen('settingsScreen')">⚙️</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="lang-switch" onclick="openScreen('settingsScreen')" style="font-size: 16px; padding: 8px 10px;">⚙️</button>
                     <button class="lang-switch" id="langBtn" onclick="toggleLanguage()">ҚАЗ</button>
                 </div>
             </header>
@@ -178,29 +183,11 @@
             </div>
         </div>
 
-        <div id="settingsScreen" class="screen">
-            <header>
-                <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
-                <div class="logo" style="font-size: 18px;" id="settingsHeaderTitle">Настройки</div>
-                <div style="width: 60px;"></div>
-            </header>
-            <div class="settings-body">
-                <div class="input-group">
-                    <label id="labelApiKey" style="font-weight: bold; color: #1e293b;">Ключ API Gemini:</label>
-                    <p style="font-size: 12px; color: #64748b; margin: 0 0 10px 0; line-height: 1.4;" id="settingsDesc">
-                        Для работы чата с искусственным интеллектом требуется персональный API-ключ Gemini. Он сохраняется локально в вашем браузере.
-                    </p>
-                    <input type="password" id="api-key-input" class="calc-input" placeholder="Вставьте ваш API ключ (начинается с AIzaSy...)">
-                </div>
-                <button class="calc-btn" onclick="saveApiKey()" id="btnSaveKey">Сохранить ключ</button>
-            </div>
-        </div>
-
         <div id="chatScreen" class="screen">
             <header>
                 <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
                 <div class="logo" style="font-size: 20px;">ayala.ai</div>
-                <button class="lang-switch" onclick="openScreen('settingsScreen')">⚙️</button>
+                <div style="width: 60px;"></div>
             </header>
 
             <div class="chat-container">
@@ -326,357 +313,406 @@
             </div>
         </div>
 
+        <div id="settingsScreen" class="screen">
+            <header>
+                <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
+                <div class="logo" style="font-size: 18px;" id="settingsHeaderTitle">Настройки</div>
+                <div style="width: 60px;"></div>
+            </header>
+
+            <div class="calc-body">
+                <div class="input-group">
+                    <label id="labelApiKey">Gemini API Ключ:</label>
+                    <input type="password" class="calc-input" id="api-key-input" placeholder="Вставьте ваш API ключ">
+                </div>
+
+                <button class="calc-btn" onclick="saveApiKey()" id="btnSaveKey">Сохранить ключ</button>
+                
+                <p style="font-size: 12px; color: #64748b; line-height: 1.4; margin: 10px 0 0 0;" id="settingsHelp">
+                    Ключ сохраняется локально в вашем браузере (localStorage) и не отправляется на сторонние серверы. Вы можете получить бесплатный ключ на <a href="https://aistudio.google.com/" target="_blank" style="color: #ff8fa3; text-decoration: underline;">Google AI Studio</a>.
+                </p>
+            </div>
+        </div>
+
     </div>
 
     <script>
-    // ==========================================
-    // 1. НАСТРОЙКИ API И СИСТЕМНЫЙ ПРОМПТ
-    // ==========================================
-    const SYSTEM_PROMPT = `Ты — Аяла, умный и заботливый цифровой помощник для будущих мам в Казахстане.
+        // ==========================================
+        // 1. НАСТРОЙКИ API И СИСТЕМНЫЙ ПРОМПТ
+        // ==========================================
+        
+        const SYSTEM_PROMPT = `Ты — Аяла, умный и заботливый цифровой помощник для будущих мам в Казахстане.
 Твоя миссия: Помогать женщинам на протяжении всей беременности, поддерживать их психологически, предоставлять проверенную информацию о здоровье и ориентироваться в социальной системе Казахстана (декретные выплаты, пособия, права).
 Твой стиль общения: Мягкий, поддерживающий, эмпатичный, но профессиональный. Язык общения зависит от языка пользователя (переключайся между русским и казахским плавно).
 Твои знания: Медицина (доказательная, но ты не врач - направляй к специалистам), контекст РК (выплаты 4.2, законы).
 Безопасность: Никогда не ставь диагнозы. При тревожных симптомах советуй скорую (103) или врача. Не советуй народную медицину.`;
 
-    let chatHistory = []; 
-    let currentLang = 'ru';
+        let chatHistory = []; 
+        let currentLang = 'ru';
 
-    // ==========================================
-    // БАЗА ДАННЫХ КЛИНИК
-    // ==========================================
-    const clinicsData = {
-        almaty: [
-            {
-                name: "A CLINIC (филиал Ерменсай)",
-                address: "мкр. Ерменсай, улица Арайлы, 12",
-                specialty: "Реабилитация после болезней, прием терапевта и педиатра",
-                schedule: "Пн–Сб: 08:00 – 17:00, Вс: выходной",
-                rating: "3.8",
-                reviews: "31 отзыв",
-                link: "https://2gis.kz/almaty/firm/70000001053702157"
-            },
-            {
-                name: "A CLINIC (филиал Жарокова)",
-                address: "улица Жарокова, 275а",
-                specialty: "Диагностика (УЗИ, ФГДС), реабилитация, стоматология",
-                schedule: "Пн–Вс: 08:00 – 20:00 (без выходных)",
-                rating: "4.0",
-                reviews: "1103 отзыва",
-                link: "https://2gis.kz/almaty/firm/70000001034440532"
-            },
-            {
-                name: "Alatau Assistance (Mediker)",
-                address: "улица Навои, 310 (1 этаж)",
-                specialty: "Семейная медицина, ведение беременности, диагностика",
-                schedule: "Пн–Пт: 08:00 – 19:00, Сб: 08:00 – 14:00, Вс: выходной",
-                rating: "4.4",
-                reviews: "742 отзыва",
-                link: "https://2gis.kz/almaty/firm/70000001031317544"
-            }
-        ]
-    };
-
-    const localTitleTranslations = {
-        ru: "Проверенные клиники в Алматы",
-        kk: "Алматыдағы тексерілген емханалар"
-    };
-
-    // Функция отрисовки локальных клиник
-    function renderLocalClinics() {
-        const city = document.getElementById('citySelector').value;
-        const container = document.getElementById('localClinicsContainer');
-        const list = document.getElementById('clinicsList');
-        const titleEl = document.getElementById('localClinicsTitle');
-
-        if (!container || !list || !titleEl) return;
-
-        titleEl.innerText = localTitleTranslations[currentLang];
-
-        if (clinicsData[city]) {
-            container.style.display = 'block';
-            list.innerHTML = ''; 
-
-            clinicsData[city].forEach(clinic => {
-                const card = document.createElement('div');
-                card.className = 'map-search-btn';
-                card.style.flexDirection = 'column';
-                card.style.alignItems = 'stretch';
-                card.style.gap = '8px';
-                card.style.borderLeft = '5px solid #ff8fa3'; 
-                card.style.textDecoration = 'none';
-
-                card.onclick = () => window.open(clinic.link, '_blank');
-
-                card.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div class="btn-info" style="max-width: 80%;">
-                            <h4 style="margin: 0 0 4px 0; font-size: 15px; color: #1e293b; font-weight: 700;">${clinic.name}</h4>
-                            <p style="margin: 0; font-size: 12px; color: #64748b;">📍 ${clinic.address}</p>
-                        </div>
-                        <div style="text-align: right; min-width: 60px;">
-                            <span style="font-size: 14px; font-weight: bold; color: #ff8fa3;">⭐ ${clinic.rating}</span>
-                            <p style="margin: 2px 0 0 0; font-size: 10px; color: #94a3b8;">${clinic.reviews}</p>
-                        </div>
-                    </div>
-                    <div style="font-size: 12px; color: #4e5d6c; line-height: 1.4; border-top: 1px dashed #f0f2f5; padding-top: 6px;">
-                        <strong>Специализация:</strong> ${clinic.specialty}<br>
-                        <strong>Режим работы:</strong> ${clinic.schedule}
-                    </div>
-                `;
-                list.appendChild(card);
-            });
-        } else {
-            container.style.display = 'none';
-        }
-    }
-
-    // ==========================================
-    // 2. ДАННЫЕ ЛОКАЛИЗАЦИИ И ИНТЕРФЕЙСА
-    // ==========================================
-    const data = {
-        ru: {
-            btn: 'ҚАЗ', back: '← Назад', placeholder: 'Напишите сообщение...',
-            title: 'Привет, будущая мама!', desc: 'Твой уютный цифровой помощник на пути к самому главному чуду.',
-            aiTitle: 'Чат с ИИ Аялой', aiDesc: 'Задай любой вопрос о беременности, здоровье и уходе за малышом в режиме реального времени.',
-            calcTitle: 'Декретные в РК', calcDesc: 'Рассчитай точный размер пособий по законам Казахстана.',
-            bagTitle: 'В роддом', bagDesc: 'Интерактивный список покупок и вещей для мамы и малыша.',
-            mapTitle: 'Роддомы и ЖК на карте', mapDesc: 'Рейтинги, контакты и честные отзывы из базы 2ГИС в твоем городе.',
-            greeting: 'Привет! Менің атым Аяла. Я готова ответить на любые вопросы о малыше, твоем здоровье или декретных выплатах в Казахстане! 💕',
-            calcHead: 'Калькулятор РК', labelInc: 'Среднемесячный доход за 12 месяцев (₸):', btnCalc: 'Рассчитать выплаты',
-            r1: 'Выплата по беременности (на руки):', r2: 'Удержанный ОПВ (10% пенсионка):',
-            disc: '*Расчет является предварительным и базируется на стандартном коэффициенте 4.2 (126 дней больничного).',
-            bagHead: 'Сумка в роддом', cDocs: '1. Документы', cMother: '2. Маме', cBaby: '3. Малышу',
-            mapHead: 'Медицинская карта',
-            mapCard: 'Выберите ваш город для быстрого поиска ближайших медицинских учреждений с отзывами и рейтингом в 2ГИС:',
-            gRodTitle: 'Роддомы', gRodDesc: 'Поиск родильных домов и перинатальных центров',
-            gJkTitle: 'Женские консультации', gJkDesc: 'Поиск ЖК и центров планирования семьи',
-            settHead: 'Настройки', labelKey: 'Ключ API Gemini:',
-            settDesc: 'Для работы чата с искусственным интеллектом требуется персональный API-ключ Gemini. Он сохраняется локально в вашем браузере.',
-            btnSave: 'Сохранить ключ'
-        },
-        kk: {
-            btn: 'РУС', back: '← Артқа', placeholder: 'Хабарлама жазыңыз...',
-            title: 'Сәлем, болашақ ана!', desc: 'Ең басты кереметке барар жолдағы сенің жайлы цифрлық көмекшің.',
-            aiTitle: 'Аяла ИИ чаты', aiDesc: 'Жүктілік, денсаулық және нәресте күтімі туралы кез келген сұрақты нақты уақытта қой.',
-            calcTitle: 'ҚР декреттік төлемдер', calcDesc: 'Қазақстан заңдары бойынша жәрдемақылардың нақты көлемін есепте.',
-            bagTitle: 'Перзентханаға', bagDesc: 'Ана мен балаға арналған заттардың интерактивті тізімі.',
-            mapTitle: 'Перзентханалар мен Емханалар', mapDesc: 'Сенің қалаңдағы 2ГИС базасынан рейтингтер, контактілер мен шынайы пікірлер.',
-            greeting: 'Сәлем! Менің атым Аяла. Мен саған жүктілік, денсаулық немесе Қазақстандағы декреттік төлемдер туралы кез келген сұрақты нақты уақытта қоюға дайынмын! 💕',
-            calcHead: 'ҚР Калькуляторы', labelInc: '12 айдағы орташа айлық табыс (₸):', btnCalc: 'Төлемдерді есептеу',
-            r1: 'Жүктілік бойынша төлем (қолға):', r2: 'Ұсталған МЗЖ (10% зейнетақы):',
-            disc: '*Есептеу алдын ала жүргізілген және 4.2 стандартты коэффициентке (126 күндік еңбекке жарамсыздық парағы) негізделген.',
-            bagHead: 'Перзентхана сөмкесі', cDocs: '1. Құжаттар', cMother: '2. Анаға', cBaby: '3. Балаға',
-            mapHead: 'Медициналық карта',
-            mapCard: 'Жақын маңдағы медициналық мекемелерді пікірлерімен және рейтингімен 2ГИС-тен жылдам іздеу үшін қалаңызды таңдаңыз:',
-            gRodTitle: 'Перзентханалар', gRodDesc: 'Босану үйлері мен перинаталдық орталықтарды іздеу',
-            gJkTitle: 'Әйелдер консультациясы', gJkDesc: 'Әйелдер консультациясы мен отбасын жоспарлау орталықтарын іздеу',
-            settHead: 'Баптаулар', labelKey: 'Gemini API-кілті:',
-            settDesc: 'Жасанды интеллект жұмыс істеуі үшін жеке Gemini API-кілті қажет. Ол браузер жадында сақталады.',
-            btnSave: 'Кілтті сақтау'
-        }
-    };
-
-    function openScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
-    }
-
-    function toggleLanguage() {
-        currentLang = currentLang === 'ru' ? 'kk' : 'ru';
-        
-        document.getElementById('langBtn').innerText = data[currentLang].btn;
-        document.querySelectorAll('.back-btn').forEach(b => b.innerText = data[currentLang].back);
-        document.getElementById('userInput').placeholder = data[currentLang].placeholder;
-
-        document.getElementById('welcomeTitle').innerText = data[currentLang].title;
-        document.getElementById('welcomeDesc').innerText = data[currentLang].desc;
-        document.getElementById('menuAiTitle').innerText = data[currentLang].aiTitle;
-        document.getElementById('menuAiDesc').innerText = data[currentLang].aiDesc;
-        document.getElementById('menuCalcTitle').innerText = data[currentLang].calcTitle;
-        document.getElementById('menuCalcDesc').innerText = data[currentLang].calcDesc;
-        document.getElementById('menuBagTitle').innerText = data[currentLang].bagTitle;
-        document.getElementById('menuBagDesc').innerText = data[currentLang].bagDesc;
-        document.getElementById('menuMapTitle').innerText = data[currentLang].mapTitle;
-        document.getElementById('menuMapDesc').innerText = data[currentLang].mapDesc;
-        document.getElementById('calcHeaderTitle').innerText = data[currentLang].calcHead;
-        document.getElementById('labelIncome').innerText = data[currentLang].labelInc;
-        document.getElementById('btnCalculate').innerText = data[currentLang].btnCalc;
-        document.getElementById('resRow1').innerText = data[currentLang].r1;
-        document.getElementById('resRow2').innerText = data[currentLang].r2;
-        document.getElementById('calcDisclaimer').innerText = data[currentLang].disc;
-        document.getElementById('bagHeaderTitle').innerText = data[currentLang].bagHead;
-        document.getElementById('catDocs').innerText = data[currentLang].cDocs;
-        document.getElementById('catMother').innerText = data[currentLang].cMother;
-        document.getElementById('catBaby').innerText = data[currentLang].cBaby;
-        
-        // Перевод элементов карты
-        document.getElementById('mapHeaderTitle').innerText = data[currentLang].mapHead;
-        document.getElementById('mapCardDesc').innerText = data[currentLang].mapCard;
-        document.getElementById('btnGisRoddomTitle').innerText = data[currentLang].gRodTitle;
-        document.getElementById('btnGisRoddomDesc').innerText = data[currentLang].gRodDesc;
-        document.getElementById('btnGisJkTitle').innerText = data[currentLang].gJkTitle;
-        document.getElementById('btnGisJkDesc').innerText = data[currentLang].gJkDesc;
-
-        // Перевод настроек
-        document.getElementById('settingsHeaderTitle').innerText = data[currentLang].settHead;
-        document.getElementById('labelApiKey').innerText = data[currentLang].labelKey;
-        document.getElementById('settingsDesc').innerText = data[currentLang].settDesc;
-        document.getElementById('btnSaveKey').innerText = data[currentLang].btnSave;
-
-        if (chatHistory.length === 0) {
-             document.getElementById('aiGreeting').innerText = data[currentLang].greeting;
+        // Получение ключа из памяти браузера
+        function getApiKey() {
+            return localStorage.getItem('gemini_api_key') || '';
         }
 
-        document.querySelectorAll('.item-text').forEach(el => {
-            el.innerText = el.getAttribute('data-' + currentLang);
-        });
-
-        renderLocalClinics();
-    }
-
-    // Сохранение ключа локально
-    function saveApiKey() {
-        const key = document.getElementById('api-key-input').value.trim();
-        if (!key) {
-            alert(currentLang === 'ru' ? 'Пожалуйста, введите ключ' : 'Кілтті енгізіңіз');
-            return;
-        }
-        localStorage.setItem('gemini_api_key', key);
-        alert(currentLang === 'ru' ? 'Ключ успешно сохранен!' : 'Кілт сәтті сақталды!');
-        openScreen('mainScreen');
-    }
-
-    function calculateMaternity() {
-        let income = parseFloat(document.getElementById('incomeInput').value);
-        if (!income || income < 0) return;
-        let totalDirty = income * 4.2;
-        let tax = totalDirty * 0.10;
-        let totalClean = totalDirty - tax;
-        document.getElementById('maternityClean').innerText = Math.round(totalClean).toLocaleString('ru-RU') + ' ₸';
-        document.getElementById('maternityTax').innerText = Math.round(tax).toLocaleString('ru-RU') + ' ₸';
-        document.getElementById('resultCard').style.display = 'flex';
-    }
-
-    // Поиск в 2ГИС
-    function openGis(type) {
-        const city = document.getElementById('citySelector').value;
-        let query = '';
-        
-        if (type === 'rod') {
-            query = currentLang === 'ru' ? 'Роддомы' : 'Перзентханалар';
-        } else {
-            query = currentLang === 'ru' ? 'Женские консультации' : 'Әйелдер консультациясы';
-        }
-        
-        const url = `https://2gis.kz/${city}/search/${encodeURIComponent(query)}`;
-        window.open(url, '_blank');
-    }
-
-    // ==========================================
-    // 3. ОТПРАВКА ЗАПРОСА К GROQ API
-    // ==========================================
-    async function sendMessage() {
-        const messageInput = document.getElementById('userInput');
-        const text = messageInput.value.trim();
-        if (!text) return;
-
-        // Очищаем поле ввода
-        messageInput.value = '';
-
-        // Выводим сообщение пользователя на экран
-        let userMsg = document.createElement('div');
-        userMsg.className = 'message user';
-        userMsg.innerText = text;
-        chatBox.appendChild(userMsg);
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-        // Сохраняем в историю в формате Gemini (чтобы не ломать совместимость)
-        chatHistory.push({
-            "role": "user",
-            "parts": [{"text": text}]
-        });
-
-        // Показываем анимацию загрузки
-        let loadingMsg = document.createElement('div');
-        loadingMsg.className = 'message ai loading';
-        loadingMsg.id = 'loadingPlaceholder';
-        loadingMsg.innerHTML = '<span>.</span><span>.</span><span>.</span>';
-        chatBox.appendChild(loadingMsg);
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-        // === НАЧАЛО БЛОКА GROQ И КОНВЕРТАЦИИ ИСТОРИИ ===
-        const groqMessages = [{ role: "system", content: SYSTEM_PROMPT }];
-        chatHistory.forEach(item => {
-            groqMessages.push({
-                role: item.role === 'model' ? 'assistant' : 'user',
-                content: item.parts[0].text
-            });
-        });
-
-        try {
-            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('gemini_api_key')}`
-                },
-                body: JSON.stringify({
-                    model: 'llama-3.3-70b-versatile',
-                    messages: groqMessages
-                })
-            });
-
-            const responseData = await response.json();
-
-            // Убираем анимацию загрузки
-            let currentLoading = document.getElementById('loadingPlaceholder');
-            if (currentLoading) { currentLoading.remove(); }
-
-            if (response.ok && responseData.choices && responseData.choices.length > 0) {
-                let aiText = responseData.choices[0].message.content;
-
-                // Сохраняем в историю
-                chatHistory.push({
-                    "role": "model",
-                    "parts": [{ "text": aiText }]
-                });
-
-                // Выводим сообщение на экран
-                let aiMsg = document.createElement('div');
-                aiMsg.className = 'message ai';
-                aiMsg.innerHTML = aiText.replace(/\n/g, '<br>').replace(/\*(.*?)\*/g, '<b>$1</b>');
-                chatBox.appendChild(aiMsg);
-                chatBox.scrollTop = chatBox.scrollHeight;
-
+        // Сохранение ключа в память браузера
+        function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            if (key) {
+                localStorage.setItem('gemini_api_key', key);
+                alert(currentLang === 'ru' ? 'Ключ успешно сохранен!' : 'Кілт сәтті сақталды!');
             } else {
-                console.error("Ошибка API:", responseData);
-                let errorText = responseData.error ? responseData.error.message : "Неизвестная ошибка сервера";
+                localStorage.removeItem('gemini_api_key');
+                alert(currentLang === 'ru' ? 'Ключ удален из памяти!' : 'Кілт жадтан өшірілді!');
+            }
+        }
+
+        // ==========================================
+        // БАЗА ДАННЫХ КЛИНИК И ПЕРЕВОДЫ
+        // ==========================================
+        const clinicsData = {
+            almaty: [
+                {
+                    name: "A CLINIC (филиал Ерменсай)",
+                    address: "мкр. Ерменсай, улица Арайлы, 12",
+                    specialty: "Реабилитация после болезней, прием терапевта и педиатра",
+                    schedule: "Пн–Сб: 08:00 – 17:00, Вс: выходной",
+                    rating: "3.8",
+                    reviews: "31 отзыв",
+                    link: "https://2gis.kz/almaty/firm/70000001053702157"
+                },
+                {
+                    name: "A CLINIC (филиал Жарокова)",
+                    address: "улица Жарокова, 275а",
+                    specialty: "Диагностика (УЗИ, ФГДС), реабилитация, стоматология",
+                    schedule: "Пн–Вс: 08:00 – 20:00 (без выходных)",
+                    rating: "4.0",
+                    reviews: "1103 отзыва",
+                    link: "https://2gis.kz/almaty/firm/70000001034440532"
+                },
+                {
+                    name: "Alatau Assistance (Mediker)",
+                    address: "улица Навои, 310 (1 этаж)",
+                    specialty: "Семейная медицина, ведение беременности, диагностика",
+                    schedule: "Пн–Пт: 08:00 – 19:00, Сб: 08:00 – 14:00, Вс: выходной",
+                    rating: "4.4",
+                    reviews: "742 отзыва",
+                    link: "https://2gis.kz/almaty/firm/70000001031317544"
+                }
+            ]
+        };
+
+        const localTitleTranslations = {
+            ru: "Проверенные клиники в Алматы",
+            kk: "Алматыдағы тексерілген емханалар"
+        };
+
+        // Функция отрисовки клиник
+        function renderLocalClinics() {
+            const city = document.getElementById('citySelector').value;
+            const container = document.getElementById('localClinicsContainer');
+            const list = document.getElementById('clinicsList');
+            const titleEl = document.getElementById('localClinicsTitle');
+
+            if (!container || !list || !titleEl) return;
+
+            titleEl.innerText = localTitleTranslations[currentLang];
+
+            if (clinicsData[city]) {
+                container.style.display = 'block';
+                list.innerHTML = ''; 
+
+                clinicsData[city].forEach(clinic => {
+                    const card = document.createElement('div');
+                    card.className = 'map-search-btn';
+                    card.style.flexDirection = 'column';
+                    card.style.alignItems = 'stretch';
+                    card.style.gap = '8px';
+                    card.style.borderLeft = '5px solid #ff8fa3'; 
+                    card.style.textDecoration = 'none';
+
+                    card.onclick = () => window.open(clinic.link, '_blank');
+
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div class="btn-info" style="max-width: 80%;">
+                                <h4 style="margin: 0 0 4px 0; font-size: 15px; color: #1e293b; font-weight: 700;">${clinic.name}</h4>
+                                <p style="margin: 0; font-size: 12px; color: #64748b;">📍 ${clinic.address}</p>
+                            </div>
+                            <div style="text-align: right; min-width: 60px;">
+                                <span style="font-size: 14px; font-weight: bold; color: #ff8fa3;">⭐ ${clinic.rating}</span>
+                                <p style="margin: 2px 0 0 0; font-size: 10px; color: #94a3b8;">${clinic.reviews}</p>
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; color: #4e5d6c; line-height: 1.4; border-top: 1px dashed #f0f2f5; padding-top: 6px;">
+                            <strong>Специализация:</strong> ${clinic.specialty}<br>
+                            <strong>Режим работы:</strong> ${clinic.schedule}
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+
+        // ==========================================
+        // 2. ДАННЫЕ ЛОКАЛИЗАЦИИ И ИНТЕРФЕЙСА
+        // ==========================================
+
+        const data = {
+            ru: {
+                btn: 'ҚАЗ', back: '← Назад', placeholder: 'Напишите сообщение...',
+                title: 'Привет, будущая мама!', desc: 'Твой уютный цифровой помощник на пути к самому главному чуду.',
+                aiTitle: 'Чат с ИИ Аялой', aiDesc: 'Задай любой вопрос о беременности, здоровье и уходе за малышом в режиме реального времени.',
+                calcTitle: 'Декретные в РК', calcDesc: 'Рассчитай точный размер пособий по законам Казахстана.',
+                bagTitle: 'В роддом', bagDesc: 'Интерактивный список покупок и вещей для мамы и малыша.',
+                mapTitle: 'Роддомы и ЖК на карте', mapDesc: 'Рейтинги, контакты и честные отзывы из базы 2ГИС в твоем городе.',
+                greeting: 'Привет! Менің атым Аяла. Я готова ответить на любые вопросы о малыше, твоем здоровье или декретных выплатах в Казахстане! 💕',
+                calcHead: 'Калькулятор РК', labelInc: 'Среднемесячный доход за 12 месяцев (₸):', btnCalc: 'Рассчитать выплаты',
+                r1: 'Выплата по беременности (на руки):', r2: 'Удержанный ОПВ (10% пенсионка):',
+                disc: '*Расчет является предварительным и базируется на стандартном коэффициенте 4.2 (126 дней больничного).',
+                bagHead: 'Сумка в роддом', cDocs: '1. Документы', cMother: '2. Маме', cBaby: '3. Малышу',
+                mapHead: 'Медицинская карта',
+                mapCard: 'Выберите ваш город для быстрого поиска ближайших медицинских учреждений с отзывами и рейтингом в 2ГИС:',
+                gRodTitle: 'Роддомы', gRodDesc: 'Поиск родильных домов и перинатальных центров',
+                gJkTitle: 'Женские консультации', gJkDesc: 'Поиск ЖК и центров планирования семьи',
+                settingsHead: 'Настройки',
+                labelApi: 'Gemini API Ключ:',
+                btnSave: 'Сохранить ключ',
+                settingsHelp: 'Ключ сохраняется локально в вашем браузере (localStorage) и не отправляется на сторонние серверы. Вы можете получить бесплатный ключ на <a href="https://aistudio.google.com/" target="_blank" style="color: #ff8fa3; text-decoration: underline;">Google AI Studio</a>.'
+            },
+            kk: {
+                btn: 'РУС', back: '← Артқа', placeholder: 'Хабарлама жазыңыз...',
+                title: 'Сәлем, болашақ ана!', desc: 'Ең басты кереметке барар жолдағы сенің жайлы цифрлық көмекшің.',
+                aiTitle: 'Аяла ИИ чаты', aiDesc: 'Жүктілік, денсаулық және нәресте күтімі туралы кез келген сұрақты нақты уақытта қой.',
+                calcTitle: 'ҚР декреттік төлемдер', calcDesc: 'Қазақстан заңдары бойынша жәрдемақылардың нақты көлемін есепте.',
+                bagTitle: 'Перзентханаға', bagDesc: 'Ана мен балаға арналған заттардың интерактивті тізімі.',
+                mapTitle: 'Перзентханалар мен Емханалар', mapDesc: 'Сенің қалаңдағы 2ГИС базасынан рейтингтер, контактілер мен шынайы пікірлер.',
+                greeting: 'Сәлем! Менің атым Аяла. Мен саған жүктілік, денсаулық немесе Қазақстандағы декреттік төлемдер туралы кез келген сұрақты нақты уақытта қоюға дайынмын! 💕',
+                calcHead: 'ҚР Калькуляторы', labelInc: '12 айдағы орташа айлық табыс (₸):', btnCalc: 'Төлемдерді есептеу',
+                r1: 'Жүктілік бойынша төлем (қолға):', r2: 'Ұсталған МЗЖ (10% зейнетақы):',
+                disc: '*Есептеу алдын ала жүргізілген және 4.2 стандартты коэффициентке (126 күндік еңбекке жарамсыздық парағы) негеделген.',
+                bagHead: 'Перзентхана сөмкесі', cDocs: '1. Құжаттар', cMother: '2. Анаға', cBaby: '3. Балаға',
+                mapHead: 'Медициналық карта',
+                mapCard: 'Жақын маңдағы медициналық мекемелерді пікірлерімен және рейтингімен 2ГИС-тен жылдам іздеу үшін қалаңызды таңдаңыз:',
+                gRodTitle: 'Перзентханалар', gRodDesc: 'Босану үйлері мен перинаталдық орталықтарды іздеу',
+                gJkTitle: 'Әйелдер консультациясы', gJkDesc: 'Әйелдер консультациясы мен отбасын жоспарлау орталықтарын іздеу',
+                settingsHead: 'Баптаулар',
+                labelApi: 'Gemini API кілті:',
+                btnSave: 'Кілтті сақтау',
+                settingsHelp: 'Кілт браузеріңізде жергілікті түрде сақталады (localStorage) и үшінші тарап серверлеріне жіберілмейді. Тегін кілтті <a href="https://aistudio.google.com/" target="_blank" style="color: #ff8fa3; text-decoration: underline;">Google AI Studio</a> сайтынан ала аласыз.'
+            }
+        };
+
+        function openScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'ru' ? 'kk' : 'ru';
+            
+            document.getElementById('langBtn').innerText = data[currentLang].btn;
+            document.querySelectorAll('.back-btn').forEach(b => b.innerText = data[currentLang].back);
+            document.getElementById('userInput').placeholder = data[currentLang].placeholder;
+
+            document.getElementById('welcomeTitle').innerText = data[currentLang].title;
+            document.getElementById('welcomeDesc').innerText = data[currentLang].desc;
+            document.getElementById('menuAiTitle').innerText = data[currentLang].aiTitle;
+            document.getElementById('menuAiDesc').innerText = data[currentLang].aiDesc;
+            document.getElementById('menuCalcTitle').innerText = data[currentLang].calcTitle;
+            document.getElementById('menuCalcDesc').innerText = data[currentLang].calcDesc;
+            document.getElementById('menuBagTitle').innerText = data[currentLang].bagTitle;
+            document.getElementById('menuBagDesc').innerText = data[currentLang].bagDesc;
+            document.getElementById('menuMapTitle').innerText = data[currentLang].mapTitle;
+            document.getElementById('menuMapDesc').innerText = data[currentLang].mapDesc;
+            document.getElementById('calcHeaderTitle').innerText = data[currentLang].calcHead;
+            document.getElementById('labelIncome').innerText = data[currentLang].labelInc;
+            document.getElementById('btnCalculate').innerText = data[currentLang].btnCalc;
+            document.getElementById('resRow1').innerText = data[currentLang].r1;
+            document.getElementById('resRow2').innerText = data[currentLang].r2;
+            document.getElementById('calcDisclaimer').innerText = data[currentLang].disc;
+            document.getElementById('bagHeaderTitle').innerText = data[currentLang].bagHead;
+            document.getElementById('catDocs').innerText = data[currentLang].cDocs;
+            document.getElementById('catMother').innerText = data[currentLang].cMother;
+            document.getElementById('catBaby').innerText = data[currentLang].cBaby;
+            
+            // Перевод элементов карты
+            document.getElementById('mapHeaderTitle').innerText = data[currentLang].mapHead;
+            document.getElementById('mapCardDesc').innerText = data[currentLang].mapCard;
+            document.getElementById('btnGisRoddomTitle').innerText = data[currentLang].gRodTitle;
+            document.getElementById('btnGisRoddomDesc').innerText = data[currentLang].gRodDesc;
+            document.getElementById('btnGisJkTitle').innerText = data[currentLang].gJkTitle;
+            document.getElementById('btnGisJkDesc').innerText = data[currentLang].gJkDesc;
+
+            // Перевод настроек
+            document.getElementById('settingsHeaderTitle').innerText = data[currentLang].settingsHead;
+            document.getElementById('labelApiKey').innerText = data[currentLang].labelApi;
+            document.getElementById('btnSaveKey').innerText = data[currentLang].btnSave;
+            document.getElementById('settingsHelp').innerHTML = data[currentLang].settingsHelp;
+
+            if (chatHistory.length === 0) {
+                 document.getElementById('aiGreeting').innerText = data[currentLang].greeting;
+            }
+
+            document.querySelectorAll('.item-text').forEach(el => {
+                el.innerText = el.getAttribute('data-' + currentLang);
+            });
+
+            renderLocalClinics();
+        }
+
+        function calculateMaternity() {
+            let income = parseFloat(document.getElementById('incomeInput').value);
+            if (!income || income < 0) return;
+            let totalDirty = income * 4.2;
+            let tax = totalDirty * 0.10;
+            let totalClean = totalDirty - tax;
+            document.getElementById('maternityClean').innerText = Math.round(totalClean).toLocaleString('ru-RU') + ' ₸';
+            document.getElementById('maternityTax').innerText = Math.round(tax).toLocaleString('ru-RU') + ' ₸';
+            document.getElementById('resultCard').style.display = 'flex';
+        }
+
+        // ==========================================
+        // 3. ОТКРЫТИЕ ПОИСКА В 2ГИС
+        // ==========================================
+        function openGis(type) {
+            const city = document.getElementById('citySelector').value;
+            let query = '';
+            
+            if (type === 'rod') {
+                query = currentLang === 'ru' ? 'Роддомы' : 'Перзентханалар';
+            } else {
+                query = currentLang === 'ru' ? 'Женские консультации' : 'Әйелдер консультациясы';
+            }
+            
+            const url = `https://2gis.kz/${city}/search/${encodeURIComponent(query)}`;
+            window.open(url, '_blank');
+        }
+
+        // ==========================================
+        // 4. МАГИЯ ИИ: ОТПРАВКА ЗАПРОСА К GEMINI
+        // ==========================================
+
+        async function sendMessage() {
+            let input = document.getElementById('userInput');
+            let text = input.value.trim();
+            if(!text) return;
+
+            let chatBox = document.getElementById('chatBox');
+            
+            let userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.innerText = text;
+            chatBox.appendChild(userMsg);
+            
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            let loadingMsg = document.createElement('div');
+            loadingMsg.className = 'message ai';
+            loadingMsg.setAttribute('id', 'loadingPlaceholder');
+            loadingMsg.innerHTML = '<span style="opacity:0.5">Аяла печатает...</span>';
+            chatBox.appendChild(loadingMsg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Динамически получаем актуальный ключ из localStorage
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                let currentLoading = document.getElementById('loadingPlaceholder');
+                if (currentLoading) { currentLoading.remove(); }
                 
                 let errorMsg = document.createElement('div');
-                errorMsg.className = 'message ai error';
-                errorMsg.innerText = "Ошибка Groq API: " + errorText;
+                errorMsg.className = 'message ai';
+                errorMsg.innerHTML = currentLang === 'ru' ? 
+                    `Пожалуйста, введите ваш API-ключ в <a href="#" onclick="openScreen('settingsScreen'); return false;" style="color: #ff8fa3; font-weight: bold; text-decoration: underline;">настройках ⚙️</a> для работы чата.` : 
+                    `Чат жұмыс істеуі үшін <a href="#" onclick="openScreen('settingsScreen'); return false;" style="color: #ff8fa3; font-weight: bold; text-decoration: underline;">баптаулар ⚙️</a> бөлімінде өз API-кілтіңізді енгізіңіз.`;
                 chatBox.appendChild(errorMsg);
                 chatBox.scrollTop = chatBox.scrollHeight;
+                return;
             }
 
-        } catch (error) {
-            console.error("Критическая ошибка:", error);
-            
-            let currentLoading = document.getElementById('loadingPlaceholder');
-            if (currentLoading) { currentLoading.remove(); }
+            // Формируем URL с актуальным ключом и стабильной моделью gemini-1.5-flash
+            const dynamicApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-            let errorMsg = document.createElement('div');
-            errorMsg.className = 'message ai error';
-            
-            // Твоя локализация ошибок для русского и казахского языков
-            errorMsg.innerText = currentLang === 'ru' ?
-                "Ошибка соединения или неверный API-ключ. Проверьте настройки. 😔" :
-                "Байланыс қатесі немесе қате API-кілт. Баптауларды тексеріңіз. 😔";
+            chatHistory.push({
+                "role": "user", 
+                "parts": [{"text": text}]
+            });
+
+            try {
+                const response = await fetch(dynamicApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        system_instruction: {
+                            parts: [{ text: SYSTEM_PROMPT }]
+                        },
+                        contents: chatHistory
+                    })
+                });
+
+                const responseData = await response.json();
                 
-            chatBox.appendChild(errorMsg);
+                let currentLoading = document.getElementById('loadingPlaceholder');
+                if (currentLoading) { currentLoading.remove(); }
+
+                if (response.ok && responseData.candidates && responseData.candidates.length > 0) {
+                    let aiText = responseData.candidates[0].content.parts[0].text;
+                    
+                    chatHistory.push({
+                        "role": "model", 
+                        "parts": [{"text": aiText}]
+                    });
+
+                    let aiMsg = document.createElement('div');
+                    aiMsg.className = 'message ai';
+                    aiMsg.innerHTML = aiText.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                    chatBox.appendChild(aiMsg);
+                } else {
+                    console.error("Ошибка сервера:", responseData);
+                    throw new Error(responseData.error?.message || "Ошибка запроса");
+                }
+
+            } catch (error) {
+                console.error("Ошибка API:", error);
+                
+                let currentLoading = document.getElementById('loadingPlaceholder');
+                if (currentLoading) { currentLoading.remove(); }
+                
+                let errorMsg = document.createElement('div');
+                errorMsg.className = 'message ai';
+                errorMsg.innerText = currentLang === 'ru' ? 
+                    `Ошибка соединения или неверный API-ключ. Проверьте настройки или консоль. 😔` : 
+                    `Байланыс қатесі немесе қате API-кілт. Консольді немесе баптауларды тексеріңіз. 😔`;
+                chatBox.appendChild(errorMsg);
+            }
+            
             chatBox.scrollTop = chatBox.scrollHeight;
         }
-    }
+
+        document.getElementById('userInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') { sendMessage(); }
+        });
+
+        // ==========================================
+        // ЗАПУСК ФУНКЦИЙ КАРТЫ И НАСТРОЕК ПРИ ЗАГРУЗКЕ
+        // ==========================================
+        
+        // Следим за переключением города в выпадающем списке
+        document.getElementById('citySelector').addEventListener('change', renderLocalClinics);
+
+        // Инициализируем отрисовку клиник и предзаполнение ключа
+        window.addEventListener('DOMContentLoaded', () => {
+            renderLocalClinics();
+            const savedKey = getApiKey();
+            if (savedKey) {
+                document.getElementById('api-key-input').value = savedKey;
+            }
+        });
+
     </script>
 </body>
 </html>

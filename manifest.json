@@ -1,0 +1,16 @@
+{
+  "name": "Ayala",
+  "short_name": "Ayala",
+  "description": "Твой цифровой помощник для будущих мам",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "ru",
+  "background_color": "#ffffff",
+  "theme_color": "#ff8fa3",
+  "icons": [
+    { "src": "./icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
