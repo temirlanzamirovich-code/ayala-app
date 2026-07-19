@@ -591,6 +591,27 @@
         }
 
         // Добавляем срок в системный промпт, чтобы Аяла его учитывала
+        // Урезанный промпт для запросов с фото: полный не влезает в бесплатный лимит
+        function buildImagePrompt() {
+            const p = calcPregnancy();
+            const g = getGender();
+            let ctx = '';
+            if (p) ctx = ` Срок: ${p.week} недель, ${p.trimester} триместр.`;
+            if (g === 'girl') ctx += ' Ждёт девочку.';
+            if (g === 'boy') ctx += ' Ждёт мальчика.';
+
+            return `Ты — Аяла, тёплая заботливая подруга для будущих мам в Казахстане.${ctx}
+
+Отвечай на языке последнего сообщения, не смешивая языки. Тон — как близкая подруга, на «ты», 2-3 эмодзи, живыми абзацами без заголовков и таблиц.
+
+Тебе прислали фото. Опиши простыми словами, что видишь. Читай только то, что реально написано — не додумывай цифры и слова.
+Если фото нечёткое — попроси переснять при хорошем свете.
+Анализы и УЗИ: объясни показатели В ОБЩЕМ, спокойно. НИКОГДА не ставь диагноз, не говори «всё хорошо» или «это плохо» и не оценивай, в норме ли её результат — это может только её врач, скажи это прямо. Не пугай.
+Назначения врача не отменяй.
+Ярлыки на одежде: читай состав, ищи flat-lock и тип застёжек, честно скажи, подходит ли вещь новорождённому.
+Не выдумывай названия магазинов, адреса и цены. Медстрахование в Казахстане — ОСМС.`;
+        }
+
         function buildSystemPrompt() {
             const p = calcPregnancy();
             if (!p) return SYSTEM_PROMPT;
@@ -618,7 +639,8 @@
         // ==========================================
         let pendingImage = null;                       // сжатое фото, ждущее отправки
         const VISION_MODEL = 'qwen/qwen3.6-27b';       // единственная модель, понимающая картинки
-        const MAX_IMAGE_SIDE = 900;                    // ужимаем, чтобы не упереться в лимит токенов
+        const MAX_IMAGE_SIDE = 620;                    // бесплатный лимит Groq — 8000 токенов в минуту,
+                                                       // а токены растут как ПЛОЩАДЬ картинки
 
         function isVisionModel(model) { return model.startsWith('qwen'); }
 
@@ -665,6 +687,28 @@
             });
         }
 
+        // Пережимаем уже сжатое фото ещё сильнее (для повторной попытки)
+        function shrinkDataUrl(dataUrl, maxSide, quality) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onerror = () => reject(new Error('Не удалось пережать фото'));
+                img.onload = () => {
+                    let { width, height } = img;
+                    if (width > maxSide || height > maxSide) {
+                        const k = maxSide / Math.max(width, height);
+                        width = Math.round(width * k);
+                        height = Math.round(height * k);
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.src = dataUrl;
+            });
+        }
+
         async function handleFileSelect(event) {
             const file = event.target.files[0];
             event.target.value = '';
@@ -681,6 +725,13 @@
 
             try {
                 pendingImage = await resizeImage(file, MAX_IMAGE_SIDE, 0.72);
+
+                // Если снимок всё равно вышел тяжёлым (много мелких деталей) —
+                // жмём ещё раз, чтобы точно влезть в бесплатный лимит
+                if (pendingImage.length > 260000) {
+                    pendingImage = await shrinkDataUrl(pendingImage, 480, 0.65);
+                }
+
                 document.getElementById('attachThumb').src = pendingImage;
                 document.getElementById('attachInfo').innerText = data[currentLang].photoReady;
                 document.getElementById('attachPreview').style.display = 'flex';
@@ -1332,7 +1383,9 @@
 
                 // В запрос отправляем картинки только из двух последних сообщений:
                 // старые фото зря съедают лимит токенов
-                const recent = chatHistory.slice(-12);
+                // С фото отправляем короткий промпт и минимум истории,
+                // иначе не влезаем в бесплатный лимит токенов
+                const recent = hasImage ? chatHistory.slice(-1) : chatHistory.slice(-12);
                 const outbound = recent.map((m, i) => {
                     if (i === recent.length - 1 || !msgImage(m.content)) return m;
                     return { role: m.role, content: msgText(m.content) };  // старые фото — только текстом
@@ -1345,7 +1398,7 @@
                     // запас на развёрнутый ответ
                     max_completion_tokens: 2048,
                     messages: [
-                        { role: 'system', content: buildSystemPrompt() },
+                        { role: 'system', content: hasImage ? buildImagePrompt() : buildSystemPrompt() },
                         ...outbound
                     ]
                 };
