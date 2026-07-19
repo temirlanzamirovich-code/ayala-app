@@ -111,6 +111,25 @@
 
         /* КАЛЬКУЛЯТОР */
         .calc-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
+        .plan-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+        .plan-tab { flex: 1; padding: 11px; border-radius: 14px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .plan-tab.active { background: #ff8fa3; border-color: #ff8fa3; color: #fff; }
+        .plan-add { width: 100%; padding: 13px; border-radius: 14px; border: 1px dashed #ffb3c6; background: #fff7f9; color: #e05a80; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 14px; }
+        .plan-form { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 16px; display: none; flex-direction: column; gap: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+        .plan-form-row { display: flex; gap: 10px; }
+        .plan-form-row > * { flex: 1; min-width: 0; }
+        .plan-btn-ghost { background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; padding: 13px; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .item-card { background: #fff; border-radius: 16px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-bottom: 10px; }
+        .item-card.past { opacity: 0.55; }
+        .item-card.soon { border-left: 4px solid #ff8fa3; }
+        .item-main { flex: 1; min-width: 0; }
+        .item-title { font-size: 15px; font-weight: 600; color: #334155; line-height: 1.3; }
+        .item-title.done { text-decoration: line-through; color: #94a3b8; }
+        .item-meta { font-size: 12px; color: #94a3b8; margin-top: 4px; line-height: 1.4; }
+        .item-badge { display: inline-block; background: #fff1f2; color: #e05a80; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; margin-top: 6px; }
+        .item-del { background: none; border: none; color: #cbd5e1; font-size: 15px; cursor: pointer; padding: 4px 6px; flex-shrink: 0; }
+        .item-check { width: 24px; height: 24px; border-radius: 8px; border: 2px solid #e2e8f0; background: #fff; cursor: pointer; flex-shrink: 0; font-size: 13px; color: #fff; display: flex; align-items: center; justify-content: center; padding: 0; }
+        .item-check.done { background: #ff8fa3; border-color: #ff8fa3; }
         .baby-card { background: #ffffff; border-radius: 20px; padding: 22px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: center; }
         .baby-week-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
         .baby-nav-btn { background: #fff1f2; border: none; color: #ff8fa3; width: 38px; height: 38px; border-radius: 50%; font-size: 18px; cursor: pointer; }
@@ -247,6 +266,12 @@
                     <p id="menuKickDesc">Считай толчки малыша с таймером и следи за его ритмом.</p>
                 </div>
 
+                <div class="menu-item" style="grid-column: span 2;" onclick="openPlanScreen()">
+                    <div class="icon">📋</div>
+                    <h3 id="menuPlanTitle">Анализы и визиты</h3>
+                    <p id="menuPlanDesc">Свой график обследований и приёмов — ничего не забудется.</p>
+                </div>
+
                 <div class="menu-item" style="grid-column: span 2;" onclick="openScreen('mapScreen')">
                     <div class="icon">📍</div>
                     <h3 id="menuMapTitle">Роддомы и ЖК на карте</h3>
@@ -281,6 +306,87 @@
                     <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Прикрепить фото">📎</button>
                     <input type="text" class="chat-input" id="userInput" placeholder="Напишите сообщение...">
                     <button class="send-btn" onclick="sendMessage()">➔</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="planScreen" class="screen">
+            <header>
+                <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
+                <div class="logo" style="font-size: 18px;" id="planHeaderTitle">Анализы и визиты</div>
+                <div style="width: 60px;"></div>
+            </header>
+
+            <div class="calc-body">
+                <div class="plan-tabs">
+                    <button class="plan-tab active" id="tabVisits" onclick="switchPlanTab('visits')">Визиты</button>
+                    <button class="plan-tab" id="tabTests" onclick="switchPlanTab('tests')">Анализы</button>
+                </div>
+
+                <div id="visitsSection">
+                    <button class="plan-add" id="btnAddVisit" onclick="toggleVisitForm()">+ Добавить визит</button>
+
+                    <div class="plan-form" id="visitForm">
+                        <div class="input-group">
+                            <label id="lblVisitTitle">К кому или зачем:</label>
+                            <input type="text" class="calc-input" id="visitTitle" placeholder="Приём у гинеколога">
+                        </div>
+                        <div class="plan-form-row">
+                            <div class="input-group">
+                                <label id="lblVisitDate">Дата:</label>
+                                <input type="date" class="calc-input" id="visitDate">
+                            </div>
+                            <div class="input-group">
+                                <label id="lblVisitTime">Время:</label>
+                                <input type="time" class="calc-input" id="visitTime">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label id="lblVisitPlace">Где (необязательно):</label>
+                            <input type="text" class="calc-input" id="visitPlace" placeholder="Кабинет 12, ЖК">
+                        </div>
+                        <div class="plan-form-row">
+                            <button class="calc-btn" onclick="saveVisit()" id="btnSaveVisit">Сохранить</button>
+                            <button class="plan-btn-ghost" onclick="toggleVisitForm()" id="btnCancelVisit">Отмена</button>
+                        </div>
+                    </div>
+
+                    <div id="visitsList"></div>
+                    <p id="visitsEmpty" style="display:none; text-align:center; color:#94a3b8; font-size:14px; padding:24px 10px;">Пока нет запланированных визитов</p>
+                </div>
+
+                <div id="testsSection" style="display: none;">
+                    <button class="plan-add" id="btnAddTest" onclick="toggleTestForm()">+ Добавить анализ</button>
+
+                    <div class="plan-form" id="testForm">
+                        <div class="input-group">
+                            <label id="lblTestTitle">Что за обследование:</label>
+                            <input type="text" class="calc-input" id="testTitle" placeholder="Общий анализ крови">
+                        </div>
+                        <div class="plan-form-row">
+                            <div class="input-group">
+                                <label id="lblTestFrom">С недели:</label>
+                                <input type="number" class="calc-input" id="testFrom" min="1" max="42" placeholder="11">
+                            </div>
+                            <div class="input-group">
+                                <label id="lblTestTo">По неделю:</label>
+                                <input type="number" class="calc-input" id="testTo" min="1" max="42" placeholder="14">
+                            </div>
+                        </div>
+                        <div class="plan-form-row">
+                            <button class="calc-btn" onclick="saveTest()" id="btnSaveTest">Сохранить</button>
+                            <button class="plan-btn-ghost" onclick="toggleTestForm()" id="btnCancelTest">Отмена</button>
+                        </div>
+                    </div>
+
+                    <div id="testsList"></div>
+                    <p id="testsEmpty" style="display:none; text-align:center; color:#94a3b8; font-size:14px; padding:20px 10px;">Список пуст</p>
+
+                    <button class="plan-btn-ghost" style="width:100%; margin-top:14px;" onclick="addTemplateTests()" id="btnTemplate">Подставить типовой набор</button>
+
+                    <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin-top:14px;" id="testsNote">
+                        Это список для себя, а не назначение. Точный перечень и сроки даёт твой врач — сверься с ним и поправь под себя.
+                    </p>
                 </div>
             </div>
         </div>
@@ -1012,6 +1118,31 @@
                 babyTitle: 'Малыш по неделям', babyDesc: 'Размер, вес и на что похож твой малыш прямо сейчас.',
                 kickTitle: 'Дневник шевелений', kickDesc: 'Считай толчки малыша с таймером и следи за его ритмом.',
                 babyHead: 'Малыш по неделям', kickHead: 'Дневник шевелений',
+                planTitle: 'Анализы и визиты', planDesc: 'Свой график обследований и приёмов — ничего не забудется.',
+                planHead: 'Анализы и визиты', tabVisits: 'Визиты', tabTests: 'Анализы',
+                addVisit: '+ Добавить визит', addTest: '+ Добавить анализ',
+                lblVisitTitle: 'К кому или зачем:', lblVisitDate: 'Дата:', lblVisitTime: 'Время:', lblVisitPlace: 'Где (необязательно):',
+                lblTestTitle: 'Что за обследование:', lblTestFrom: 'С недели:', lblTestTo: 'По неделю:',
+                btnSave: 'Сохранить', btnCancel: 'Отмена', btnTemplate: 'Подставить типовой набор',
+                noVisits: 'Пока нет запланированных визитов', noTests: 'Список пуст',
+                needTitleDate: 'Заполни хотя бы название и дату.', needTitle: 'Напиши, что за обследование.',
+                confirmDeleteItem: 'Удалить эту запись?',
+                confirmTemplate: 'Добавить типовой список обследований? Сроки ориентировочные — обязательно сверь их со своим врачом и поправь.',
+                today: 'сегодня', tomorrow: 'завтра', inDays: 'через {n} дн.',
+                weeksRange: '{a}–{b} неделя', weekSingle: '{a} неделя', nowRelevant: 'сейчас актуально',
+                testsNote: 'Это список для себя, а не назначение. Точный перечень и сроки даёт твой врач — сверься с ним и поправь под себя.',
+                templateTests: [
+                    { title: 'Постановка на учёт в ЖК', from: 8, to: 12 },
+                    { title: 'Общий анализ крови', from: 8, to: 12 },
+                    { title: 'Общий анализ мочи', from: 8, to: 12 },
+                    { title: 'Группа крови и резус-фактор', from: 8, to: 12 },
+                    { title: 'Анализы на инфекции (ВИЧ, гепатиты, сифилис)', from: 8, to: 12 },
+                    { title: 'Первый УЗИ-скрининг', from: 11, to: 14 },
+                    { title: 'Второй УЗИ-скрининг', from: 18, to: 21 },
+                    { title: 'Тест на толерантность к глюкозе', from: 24, to: 28 },
+                    { title: 'Повторные анализы на инфекции', from: 28, to: 32 },
+                    { title: 'Третий УЗИ-скрининг', from: 30, to: 34 }
+                ],
                 capLen: 'рост', capWeight: 'вес',
                 capHome: 'Как вещь под рукой', capKz: 'По-казахстански',
                 babyNote: 'Цифры средние по неделям — малыши растут по-своему, и это нормально.',
@@ -1072,6 +1203,31 @@
                 babyTitle: 'Нәресте апта сайын', babyDesc: 'Нәрестеңнің дәл қазіргі бойы, салмағы және неге ұқсайтыны.',
                 kickTitle: 'Қимыл күнделігі', kickDesc: 'Нәрестенің қимылын таймермен сана.',
                 babyHead: 'Нәресте апта сайын', kickHead: 'Қимыл күнделігі',
+                planTitle: 'Талдаулар мен қабылдаулар', planDesc: 'Өз тексерулерің мен дәрігерге баруларың — ештеңе ұмытылмайды.',
+                planHead: 'Талдаулар мен қабылдаулар', tabVisits: 'Қабылдаулар', tabTests: 'Талдаулар',
+                addVisit: '+ Қабылдау қосу', addTest: '+ Талдау қосу',
+                lblVisitTitle: 'Кімге немесе не үшін:', lblVisitDate: 'Күні:', lblVisitTime: 'Уақыты:', lblVisitPlace: 'Қайда (міндетті емес):',
+                lblTestTitle: 'Қандай тексеру:', lblTestFrom: 'Қай аптадан:', lblTestTo: 'Қай аптаға дейін:',
+                btnSave: 'Сақтау', btnCancel: 'Болдырмау', btnTemplate: 'Үлгі тізімді қосу',
+                noVisits: 'Әзірге жоспарланған қабылдау жоқ', noTests: 'Тізім бос',
+                needTitleDate: 'Кемінде атауы мен күнін толтыр.', needTitle: 'Қандай тексеру екенін жаз.',
+                confirmDeleteItem: 'Бұл жазба өшірілсін бе?',
+                confirmTemplate: 'Тексерулердің үлгі тізімі қосылсын ба? Мерзімдер шамамен — өз дәрігеріңмен міндетті түрде салыстырып, түзет.',
+                today: 'бүгін', tomorrow: 'ертең', inDays: '{n} күннен кейін',
+                weeksRange: '{a}–{b} апта', weekSingle: '{a} апта', nowRelevant: 'қазір өзекті',
+                testsNote: 'Бұл — өзің үшін жасалған тізім, дәрігердің тағайындауы емес. Нақты тізім мен мерзімді дәрігерің береді — онымен салыстырып, өзіңе қарай түзет.',
+                templateTests: [
+                    { title: 'Әйелдер кеңесіне есепке тұру', from: 8, to: 12 },
+                    { title: 'Жалпы қан талдауы', from: 8, to: 12 },
+                    { title: 'Жалпы зәр талдауы', from: 8, to: 12 },
+                    { title: 'Қан тобы мен резус-факторы', from: 8, to: 12 },
+                    { title: 'Инфекцияларға талдау (АИТВ, гепатит, мерез)', from: 8, to: 12 },
+                    { title: 'Бірінші УДЗ скринингі', from: 11, to: 14 },
+                    { title: 'Екінші УДЗ скринингі', from: 18, to: 21 },
+                    { title: 'Глюкозаға төзімділік сынағы', from: 24, to: 28 },
+                    { title: 'Инфекцияларға қайта талдау', from: 28, to: 32 },
+                    { title: 'Үшінші УДЗ скринингі', from: 30, to: 34 }
+                ],
                 capLen: 'бойы', capWeight: 'салмағы',
                 capHome: 'Қолдағы затпен салыстырсақ', capKz: 'Қазақша айтсақ',
                 babyNote: 'Сандар — апта бойынша орташа көрсеткіш. Әр нәресте өзінше өседі, бұл қалыпты жағдай.',
@@ -1170,6 +1326,27 @@
             document.getElementById('menuBabyDesc').innerText = data[currentLang].babyDesc;
             document.getElementById('menuKickTitle').innerText = data[currentLang].kickTitle;
             document.getElementById('menuKickDesc').innerText = data[currentLang].kickDesc;
+            document.getElementById('menuPlanTitle').innerText = data[currentLang].planTitle;
+            document.getElementById('menuPlanDesc').innerText = data[currentLang].planDesc;
+            document.getElementById('planHeaderTitle').innerText = data[currentLang].planHead;
+            document.getElementById('tabVisits').innerText = data[currentLang].tabVisits;
+            document.getElementById('tabTests').innerText = data[currentLang].tabTests;
+            document.getElementById('btnAddVisit').innerText = data[currentLang].addVisit;
+            document.getElementById('btnAddTest').innerText = data[currentLang].addTest;
+            document.getElementById('lblVisitTitle').innerText = data[currentLang].lblVisitTitle;
+            document.getElementById('lblVisitDate').innerText = data[currentLang].lblVisitDate;
+            document.getElementById('lblVisitTime').innerText = data[currentLang].lblVisitTime;
+            document.getElementById('lblVisitPlace').innerText = data[currentLang].lblVisitPlace;
+            document.getElementById('lblTestTitle').innerText = data[currentLang].lblTestTitle;
+            document.getElementById('lblTestFrom').innerText = data[currentLang].lblTestFrom;
+            document.getElementById('lblTestTo').innerText = data[currentLang].lblTestTo;
+            document.getElementById('btnSaveVisit').innerText = data[currentLang].btnSave;
+            document.getElementById('btnCancelVisit').innerText = data[currentLang].btnCancel;
+            document.getElementById('btnSaveTest').innerText = data[currentLang].btnSave;
+            document.getElementById('btnCancelTest').innerText = data[currentLang].btnCancel;
+            document.getElementById('btnTemplate').innerText = data[currentLang].btnTemplate;
+            document.getElementById('testsNote').innerText = data[currentLang].testsNote;
+            if (document.getElementById('planScreen').classList.contains('active')) { renderVisits(); renderTests(); }
             document.getElementById('babyHeaderTitle').innerText = data[currentLang].babyHead;
             document.getElementById('kickHeaderTitle').innerText = data[currentLang].kickHead;
             document.getElementById('babyLenCap').innerText = data[currentLang].capLen;
@@ -1671,6 +1848,260 @@
             renderKickHistory();
             updateKickView();
             openScreen('kickScreen');
+        }
+
+        // ==========================================
+        // АНАЛИЗЫ И ВИЗИТЫ
+        // ==========================================
+        const VISITS_KEY = 'ayala_visits';
+        const TESTS_KEY = 'ayala_tests';
+
+        function loadList(key) {
+            try {
+                const v = JSON.parse(localStorage.getItem(key));
+                return Array.isArray(v) ? v : [];
+            } catch (e) { return []; }
+        }
+        function storeList(key, list) {
+            try { localStorage.setItem(key, JSON.stringify(list)); }
+            catch (e) { console.error('Не удалось сохранить список:', e); }
+        }
+        function newId() { return 'i' + Date.now() + Math.random().toString(36).slice(2, 5); }
+
+        function switchPlanTab(tab) {
+            const isVisits = tab === 'visits';
+            document.getElementById('visitsSection').style.display = isVisits ? 'block' : 'none';
+            document.getElementById('testsSection').style.display = isVisits ? 'none' : 'block';
+            document.getElementById('tabVisits').classList.toggle('active', isVisits);
+            document.getElementById('tabTests').classList.toggle('active', !isVisits);
+        }
+
+        function toggleVisitForm() {
+            const f = document.getElementById('visitForm');
+            const open = f.style.display !== 'flex';
+            f.style.display = open ? 'flex' : 'none';
+            if (!open) return;
+            document.getElementById('visitTitle').value = '';
+            document.getElementById('visitDate').value = '';
+            document.getElementById('visitTime').value = '';
+            document.getElementById('visitPlace').value = '';
+        }
+
+        function saveVisit() {
+            const title = document.getElementById('visitTitle').value.trim();
+            const date = document.getElementById('visitDate').value;
+            const time = document.getElementById('visitTime').value;
+            const place = document.getElementById('visitPlace').value.trim();
+
+            if (!title || !date) { alert(data[currentLang].needTitleDate); return; }
+
+            const list = loadList(VISITS_KEY);
+            list.push({ id: newId(), title, date, time, place });
+            storeList(VISITS_KEY, list);
+
+            toggleVisitForm();
+            renderVisits();
+        }
+
+        function deleteVisit(id) {
+            if (!confirm(data[currentLang].confirmDeleteItem)) return;
+            storeList(VISITS_KEY, loadList(VISITS_KEY).filter(v => v.id !== id));
+            renderVisits();
+        }
+
+        // Сколько дней до визита: отрицательное — уже прошёл
+        function daysUntil(dateStr) {
+            const target = new Date(dateStr + 'T00:00:00');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return Math.round((target - today) / 86400000);
+        }
+
+        function renderVisits() {
+            const box = document.getElementById('visitsList');
+            const empty = document.getElementById('visitsEmpty');
+            const t = data[currentLang];
+
+            const list = loadList(VISITS_KEY).sort((a, b) =>
+                (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+
+            box.innerHTML = '';
+            if (list.length === 0) {
+                empty.style.display = 'block';
+                empty.innerText = t.noVisits;
+                return;
+            }
+            empty.style.display = 'none';
+
+            list.forEach(v => {
+                const days = daysUntil(v.date);
+                const card = document.createElement('div');
+                card.className = 'item-card' + (days < 0 ? ' past' : (days <= 3 ? ' soon' : ''));
+
+                const main = document.createElement('div');
+                main.className = 'item-main';
+
+                const title = document.createElement('div');
+                title.className = 'item-title';
+                title.innerText = v.title;
+
+                const meta = document.createElement('div');
+                meta.className = 'item-meta';
+                const d = new Date(v.date + 'T00:00:00');
+                meta.innerText = d.toLocaleDateString() + (v.time ? ', ' + v.time : '') +
+                                 (v.place ? ' • ' + v.place : '');
+
+                main.appendChild(title);
+                main.appendChild(meta);
+
+                let badgeText = '';
+                if (days === 0) badgeText = t.today;
+                else if (days === 1) badgeText = t.tomorrow;
+                else if (days > 1) badgeText = t.inDays.replace('{n}', days);
+                if (badgeText) {
+                    const badge = document.createElement('div');
+                    badge.className = 'item-badge';
+                    badge.innerText = badgeText;
+                    main.appendChild(badge);
+                }
+
+                const del = document.createElement('button');
+                del.className = 'item-del';
+                del.innerText = '✕';
+                del.onclick = () => deleteVisit(v.id);
+
+                card.appendChild(main);
+                card.appendChild(del);
+                box.appendChild(card);
+            });
+        }
+
+        function toggleTestForm() {
+            const f = document.getElementById('testForm');
+            const open = f.style.display !== 'flex';
+            f.style.display = open ? 'flex' : 'none';
+            if (!open) return;
+            document.getElementById('testTitle').value = '';
+            document.getElementById('testFrom').value = '';
+            document.getElementById('testTo').value = '';
+        }
+
+        function saveTest() {
+            const title = document.getElementById('testTitle').value.trim();
+            const from = parseInt(document.getElementById('testFrom').value, 10);
+            const to = parseInt(document.getElementById('testTo').value, 10);
+
+            if (!title) { alert(data[currentLang].needTitle); return; }
+
+            const list = loadList(TESTS_KEY);
+            list.push({
+                id: newId(), title, done: false,
+                from: isNaN(from) ? null : from,
+                to: isNaN(to) ? (isNaN(from) ? null : from) : to
+            });
+            storeList(TESTS_KEY, list);
+
+            toggleTestForm();
+            renderTests();
+        }
+
+        function toggleTestDone(id) {
+            const list = loadList(TESTS_KEY);
+            const item = list.find(x => x.id === id);
+            if (!item) return;
+            item.done = !item.done;
+            item.doneDate = item.done ? Date.now() : null;
+            storeList(TESTS_KEY, list);
+            renderTests();
+        }
+
+        function deleteTest(id) {
+            if (!confirm(data[currentLang].confirmDeleteItem)) return;
+            storeList(TESTS_KEY, loadList(TESTS_KEY).filter(x => x.id !== id));
+            renderTests();
+        }
+
+        // Типовой набор: сроки ориентировочные, женщина сверяет с врачом
+        function addTemplateTests() {
+            if (!confirm(data[currentLang].confirmTemplate)) return;
+            const tpl = data[currentLang].templateTests;
+            const list = loadList(TESTS_KEY);
+            tpl.forEach(item => {
+                const exists = list.some(x => x.title.toLowerCase() === item.title.toLowerCase());
+                if (!exists) list.push({ id: newId(), title: item.title, from: item.from, to: item.to, done: false });
+            });
+            storeList(TESTS_KEY, list);
+            renderTests();
+        }
+
+        function renderTests() {
+            const box = document.getElementById('testsList');
+            const empty = document.getElementById('testsEmpty');
+            const t = data[currentLang];
+            const p = calcPregnancy();
+            const curWeek = p ? p.week + 1 : null;
+
+            const list = loadList(TESTS_KEY).sort((a, b) => (a.from || 99) - (b.from || 99));
+
+            box.innerHTML = '';
+            if (list.length === 0) {
+                empty.style.display = 'block';
+                empty.innerText = t.noTests;
+                return;
+            }
+            empty.style.display = 'none';
+
+            list.forEach(item => {
+                const card = document.createElement('div');
+                const active = curWeek && item.from && curWeek >= item.from && curWeek <= (item.to || item.from);
+                card.className = 'item-card' + (active && !item.done ? ' soon' : '');
+
+                const check = document.createElement('button');
+                check.className = 'item-check' + (item.done ? ' done' : '');
+                check.innerText = item.done ? '✓' : '';
+                check.onclick = () => toggleTestDone(item.id);
+
+                const main = document.createElement('div');
+                main.className = 'item-main';
+
+                const title = document.createElement('div');
+                title.className = 'item-title' + (item.done ? ' done' : '');
+                title.innerText = item.title;
+                main.appendChild(title);
+
+                if (item.from) {
+                    const meta = document.createElement('div');
+                    meta.className = 'item-meta';
+                    meta.innerText = item.to && item.to !== item.from
+                        ? t.weeksRange.replace('{a}', item.from).replace('{b}', item.to)
+                        : t.weekSingle.replace('{a}', item.from);
+                    main.appendChild(meta);
+                }
+
+                if (active && !item.done) {
+                    const badge = document.createElement('div');
+                    badge.className = 'item-badge';
+                    badge.innerText = t.nowRelevant;
+                    main.appendChild(badge);
+                }
+
+                const del = document.createElement('button');
+                del.className = 'item-del';
+                del.innerText = '✕';
+                del.onclick = () => deleteTest(item.id);
+
+                card.appendChild(check);
+                card.appendChild(main);
+                card.appendChild(del);
+                box.appendChild(card);
+            });
+        }
+
+        function openPlanScreen() {
+            renderVisits();
+            renderTests();
+            switchPlanTab('visits');
+            openScreen('planScreen');
         }
 
         function openChatsList() {
