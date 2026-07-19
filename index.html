@@ -104,6 +104,12 @@
 
         /* КАЛЬКУЛЯТОР */
         .calc-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
+        .chat-row { background: #ffffff; border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); cursor: pointer; transition: transform 0.1s; }
+        .chat-row:active { transform: scale(0.99); }
+        .chat-row-title { font-size: 15px; font-weight: 600; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-row-meta { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+        .chat-row-del { background: none; border: none; color: #cbd5e1; font-size: 16px; cursor: pointer; padding: 6px 8px; border-radius: 8px; flex-shrink: 0; }
+        .chat-row-del:hover { color: #ff8fa3; background: #fff1f2; }
         .term-card { background: #ffffff; border-radius: 20px; padding: 18px 20px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.1s; }
         .term-card:active { transform: scale(0.99); }
         .term-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
@@ -210,7 +216,10 @@
             <header>
                 <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
                 <div class="logo" style="font-size: 20px;">ayala</div>
-                <button class="lang-switch" id="newChatBtn" onclick="newChat()" style="font-size: 13px; padding: 8px 12px;">Новый</button>
+                <div style="display: flex; gap: 6px;">
+                    <button class="lang-switch" onclick="openChatsList()" style="font-size: 15px; padding: 8px 10px;" title="Мои чаты">🗂</button>
+                    <button class="lang-switch" id="newChatBtn" onclick="startNewChat()" style="font-size: 17px; padding: 8px 11px;" title="Новый чат">+</button>
+                </div>
             </header>
 
             <div class="chat-container">
@@ -223,6 +232,19 @@
                     <input type="text" class="chat-input" id="userInput" placeholder="Напишите сообщение...">
                     <button class="send-btn" onclick="sendMessage()">➔</button>
                 </div>
+            </div>
+        </div>
+
+        <div id="chatsScreen" class="screen">
+            <header>
+                <button class="back-btn" onclick="openScreen('chatScreen')">← Назад</button>
+                <div class="logo" style="font-size: 18px;" id="chatsHeaderTitle">Мои чаты</div>
+                <button class="lang-switch" onclick="startNewChat()" style="font-size: 17px; padding: 8px 11px;">+</button>
+            </header>
+
+            <div class="calc-body">
+                <div id="chatsList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                <p id="chatsEmpty" style="display: none; text-align: center; color: #94a3b8; font-size: 14px; padding: 30px 10px;">Пока нет сохранённых чатов</p>
             </div>
         </div>
 
@@ -345,6 +367,15 @@
 
             <div class="calc-body">
                 <div class="input-group">
+                    <label id="labelGender">Пол малыша:</label>
+                    <select class="calc-input" id="gender-select" onchange="saveGender()">
+                        <option value="" id="optUnknown">Пока не знаю</option>
+                        <option value="girl" id="optGirl">Девочка</option>
+                        <option value="boy" id="optBoy">Мальчик</option>
+                    </select>
+                </div>
+
+                <div class="input-group" style="margin-top: 20px;">
                     <label id="labelDueDate">Предполагаемая дата родов (ПДР):</label>
                     <input type="date" class="calc-input" id="due-date-input">
                 </div>
@@ -395,6 +426,13 @@
 
 ## ЯЗЫК ОТВЕТА ((строгое правило))
 Определи язык последнего сообщения и напиши ВЕСЬ ответ на этом языке. Русский — значит только русский, казахский — только казахский. Смешивать языки внутри ответа запрещено. Только кириллица, никаких иероглифов.
+
+Если отвечаешь по-казахски, будь особенно внимательна к языку:
+- Пиши простыми короткими предложениями. Лучше просто и правильно, чем красиво и с ошибками.
+- Используй только те слова, в которых уверена. Не изобретай слова и не склеивай их наугад.
+- Медицинские термины, в казахском написании которых сомневаешься, пиши по-русски в скобках после казахского слова.
+- Не переводи дословно русские обороты — стройся по правилам казахского языка.
+- Перечитай ответ перед отправкой: каждое слово должно быть настоящим казахским словом.
 
 ## ТВОЙ ХАРАКТЕР
 Ты разговариваешь как близкая подруга, а не как справочник.
@@ -506,11 +544,32 @@
             const p = calcPregnancy();
             if (!p) return SYSTEM_PROMPT;
 
+            const g = getGender();
+            let genderLine = '';
+            if (g === 'girl') genderLine = '\nПол малыша известен: ДЕВОЧКА. Говори о ней в женском роде («твоя дочка», «она»).';
+            if (g === 'boy') genderLine = '\nПол малыша известен: МАЛЬЧИК. Говори о нём в мужском роде («твой сынок», «он»).';
+
             return SYSTEM_PROMPT + `
 
 ## СРОК СОБЕСЕДНИЦЫ ((данные из приложения, им можно доверять))
 Сейчас у неё ${p.week} полных недель и ${p.days} дней беременности — то есть идёт ${p.week + 1}-я неделя, ${p.trimester} триместр. До предполагаемой даты родов около ${p.daysLeft} дней.
-Учитывай этот срок в каждом ответе и НЕ спрашивай его заново — ты его уже знаешь. Рассказывай о том, что происходит с малышом и с её телом именно сейчас, и что уместно делать на этом сроке.`;
+Учитывай этот срок в каждом ответе и НЕ спрашивай его заново — ты его уже знаешь. Рассказывай о том, что происходит с малышом и с её телом именно сейчас, и что уместно делать на этом сроке.${genderLine}
+
+## СПРАВОЧНИК РАЗМЕРОВ МАЛЫША ((сверяйся с ним, не выдумывай цифры))
+12 недель — около 6 см, 15 г. 16 недель — около 12 см, 100 г. 20 недель — около 25 см, 300 г.
+24 недели — около 30 см, 600 г. 28 недель — около 37 см, 1000 г. 32 недели — около 42 см, 1700 г.
+36 недель — около 47 см, 2600 г. 40 недель — около 51 см, 3400 г.
+Между этими точками прикидывай пропорционально. Никогда не называй цифру наугад — ошибка вдвое пугает или успокаивает зря.`;
+        }
+
+        const GENDER_KEY = 'ayala_baby_gender';
+
+        function getGender() { return localStorage.getItem(GENDER_KEY) || ''; }
+
+        function saveGender() {
+            const v = document.getElementById('gender-select').value;
+            if (v) localStorage.setItem(GENDER_KEY, v);
+            else localStorage.removeItem(GENDER_KEY);
         }
 
         function getApiKey() {
@@ -640,6 +699,11 @@
                 btnSaveDate: 'Сохранить дату',
                 dueDateHelp: 'Эту дату ставит врач в женской консультации. Зная её, приложение само посчитает твою неделю, а Аяла будет учитывать срок в ответах.',
                 newChatBtn: 'Новый',
+                chatsHead: 'Мои чаты', untitledChat: 'Новый чат',
+                noChats: 'Пока нет сохранённых чатов', msgWord: 'сообщ.',
+                confirmDelete: 'Удалить этот чат? Восстановить не получится.',
+                labelGender: 'Пол малыша:',
+                optUnknown: 'Пока не знаю', optGirl: 'Девочка', optBoy: 'Мальчик',
                 calcHead: 'Калькулятор РК', labelInc: 'Среднемесячный доход за 12 месяцев (₸):', btnCalc: 'Рассчитать выплаты',
                 r1: 'Выплата по беременности (на руки):', r2: 'Удержанный ОПВ (10% пенсионка):',
                 disc: '*Расчет является предварительным и базируется на стандартном коэффициенте 4.2 (126 дней больничного).',
@@ -669,6 +733,11 @@
                 btnSaveDate: 'Күнді сақтау',
                 dueDateHelp: 'Бұл күнді әйелдер кеңесіндегі дәрігер қояды. Оны білсе, қосымша аптаңды өзі санайды, ал Аяла жауаптарында мерзімді ескереді.',
                 newChatBtn: 'Жаңа',
+                chatsHead: 'Менің чаттарым', untitledChat: 'Жаңа чат',
+                noChats: 'Әзірге сақталған чат жоқ', msgWord: 'хабарлама',
+                confirmDelete: 'Бұл чат өшірілсін бе? Қалпына келтіру мүмкін емес.',
+                labelGender: 'Нәрестенің жынысы:',
+                optUnknown: 'Әзірге білмеймін', optGirl: 'Қыз', optBoy: 'Ұл',
                 calcHead: 'ҚР Калькуляторы', labelInc: '12 айдағы орташа айлық табыс (₸):', btnCalc: 'Төлемдерді есептеу',
                 r1: 'Жүктілік бойынша төлем (қолға):', r2: 'Ұсталған МЗЖ (10% зейнетақы):',
                 disc: '*Есептеу алдын ала жүргізілген және 4.2 стандартты коэффициентке (126 күндік еңбекке жарамсыздық парағы) негеделген.',
@@ -680,7 +749,7 @@
                 settingsHead: 'Баптаулар',
                 labelApi: 'Groq API кілті:',
                 btnSave: 'Кілтті сақтау',
-                settingsHelp: 'Кілт браузеріңізде жергілікті түрде сақталады (localStorage) и үшінші тарап серверлеріне жіберілмейді. Тегін кілтті <a href="https://console.groq.com/keys" target="_blank" style="color: #ff8fa3; text-decoration: underline;">Groq Console</a> сайтынан ала аласыз.'
+                settingsHelp: 'Кілт браузеріңізде жергілікті түрде сақталады (localStorage) және үшінші тарап серверлеріне жіберілмейді. Тегін кілтті <a href="https://console.groq.com/keys" target="_blank" style="color: #ff8fa3; text-decoration: underline;">Groq Console</a> сайтынан ала аласыз.'
             }
         };
 
@@ -735,8 +804,13 @@
             document.getElementById('labelDueDate').innerText = data[currentLang].labelDueDate;
             document.getElementById('btnSaveDate').innerText = data[currentLang].btnSaveDate;
             document.getElementById('dueDateHelp').innerText = data[currentLang].dueDateHelp;
-            document.getElementById('newChatBtn').innerText = data[currentLang].newChatBtn;
+            document.getElementById('chatsHeaderTitle').innerText = data[currentLang].chatsHead;
+            document.getElementById('labelGender').innerText = data[currentLang].labelGender;
+            document.getElementById('optUnknown').innerText = data[currentLang].optUnknown;
+            document.getElementById('optGirl').innerText = data[currentLang].optGirl;
+            document.getElementById('optBoy').innerText = data[currentLang].optBoy;
             renderTermCard();
+            if (document.getElementById('chatsScreen').classList.contains('active')) renderChatsList();
 
             if (chatHistory.length === 0) {
                  document.getElementById('aiGreeting').innerText = data[currentLang].greeting;
@@ -782,21 +856,95 @@
         // ==========================================
 
         // ==========================================
-        // СОХРАНЕНИЕ И ЗАГРУЗКА ИСТОРИИ ЧАТА
+        // СИСТЕМА ЧАТОВ (несколько диалогов, как в ChatGPT)
         // ==========================================
 
-        const CHAT_STORAGE_KEY = 'ayala_chat_history';
+        const CHATS_KEY = 'ayala_chats';
+        const ACTIVE_CHAT_KEY = 'ayala_active_chat';
 
-        // Сохраняем весь массив chatHistory в память браузера
-        function saveChatHistory() {
+        function getChats() {
             try {
-                localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory));
+                const v = JSON.parse(localStorage.getItem(CHATS_KEY));
+                return Array.isArray(v) ? v : [];
             } catch (e) {
-                console.error('Не удалось сохранить историю чата:', e);
+                console.error('Список чатов повреждён:', e);
+                return [];
             }
         }
 
-        // Рисуем одно сообщение в окне чата (в том же стиле, что и живые сообщения)
+        function saveChats(chats) {
+            try {
+                localStorage.setItem(CHATS_KEY, JSON.stringify(chats));
+            } catch (e) {
+                console.error('Не удалось сохранить чаты:', e);
+            }
+        }
+
+        function getActiveChatId() { return localStorage.getItem(ACTIVE_CHAT_KEY) || ''; }
+        function setActiveChatId(id) { localStorage.setItem(ACTIVE_CHAT_KEY, id); }
+        function makeChatId() { return 'c' + Date.now() + Math.random().toString(36).slice(2, 6); }
+
+        // Заголовок чата — первая фраза пользователя
+        function makeChatTitle(msgs) {
+            const first = (msgs || []).find(m => m.role === 'user');
+            if (!first || !first.content) return data[currentLang].untitledChat;
+            const t = first.content.trim().replace(/\s+/g, ' ');
+            return t.length > 42 ? t.slice(0, 42) + '…' : t;
+        }
+
+        // Приводим сообщение к формату Groq (в т.ч. старые записи Gemini)
+        function normalizeMsg(item) {
+            const role = item.role === 'model' ? 'assistant' : item.role;
+            const content = (typeof item.content === 'string')
+                ? item.content
+                : ((item.parts && item.parts[0]) ? item.parts[0].text : '');
+            return { role, content };
+        }
+
+        // Переносим старую единственную переписку в новый формат
+        function migrateOldHistory() {
+            const raw = localStorage.getItem('ayala_chat_history');
+            if (!raw) return;
+            try {
+                const arr = JSON.parse(raw);
+                if (Array.isArray(arr) && arr.length > 0) {
+                    const msgs = arr.map(normalizeMsg);
+                    const chats = getChats();
+                    const chat = { id: makeChatId(), title: makeChatTitle(msgs), messages: msgs, updatedAt: Date.now() };
+                    chats.unshift(chat);
+                    saveChats(chats);
+                    setActiveChatId(chat.id);
+                }
+            } catch (e) {
+                console.error('Не удалось перенести старую историю:', e);
+            }
+            localStorage.removeItem('ayala_chat_history');
+        }
+
+        // Сохраняем текущую переписку в активный чат
+        function saveChatHistory() {
+            const chats = getChats();
+            let id = getActiveChatId();
+            let chat = chats.find(c => c.id === id);
+
+            if (!chat) {
+                chat = { id: id || makeChatId(), title: '', messages: [], updatedAt: Date.now() };
+                setActiveChatId(chat.id);
+                chats.unshift(chat);
+            }
+
+            chat.messages = chatHistory;
+            chat.title = makeChatTitle(chatHistory);
+            chat.updatedAt = Date.now();
+
+            // свежий чат — наверх списка
+            const idx = chats.indexOf(chat);
+            if (idx > 0) { chats.splice(idx, 1); chats.unshift(chat); }
+
+            saveChats(chats);
+        }
+
+        // Рисуем одно сообщение в окне чата
         function renderMessage(role, text) {
             const chatBox = document.getElementById('chatBox');
             const msg = document.createElement('div');
@@ -810,45 +958,114 @@
             chatBox.appendChild(msg);
         }
 
-        // Загружаем историю при старте и восстанавливаем сообщения на экране
-        function loadChatHistory() {
-            let saved = null;
-            try {
-                saved = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY));
-            } catch (e) {
-                console.error('История чата повреждена, очищаю:', e);
-                localStorage.removeItem(CHAT_STORAGE_KEY);
-            }
-            if (!Array.isArray(saved) || saved.length === 0) return;
-
-            // Приводим к формату Groq (на случай старых записей в формате Gemini)
-            chatHistory = saved.map(item => {
-                const role = item.role === 'model' ? 'assistant' : item.role;
-                const content = (typeof item.content === 'string')
-                    ? item.content
-                    : ((item.parts && item.parts[0]) ? item.parts[0].text : '');
-                return { role, content };
-            });
-            chatHistory.forEach(item => renderMessage(item.role, item.content));
-            const chatBox = document.getElementById('chatBox');
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        // Очистка истории — пригодится для кнопки "Новый чат"
-        function newChat() {
-            const msg = currentLang === 'ru'
-                ? 'Начать новый чат? Текущая переписка будет удалена.'
-                : 'Жаңа чат бастау керек пе? Ағымдағы жазысу өшіріледі.';
-            if (chatHistory.length === 0 || confirm(msg)) {
-                clearChatHistory();
-            }
-        }
-
-        function clearChatHistory() {
-            chatHistory = [];
-            localStorage.removeItem(CHAT_STORAGE_KEY);
+        function clearChatBox() {
             const chatBox = document.getElementById('chatBox');
             chatBox.querySelectorAll('.message:not(#aiGreeting)').forEach(el => el.remove());
+            document.getElementById('aiGreeting').style.display = 'block';
+        }
+
+        // Открываем чат по id
+        function openChat(id) {
+            const chat = getChats().find(c => c.id === id);
+            if (!chat) return;
+            setActiveChatId(id);
+            chatHistory = (chat.messages || []).map(normalizeMsg);
+            clearChatBox();
+            chatHistory.forEach(m => renderMessage(m.role, m.content));
+            const chatBox = document.getElementById('chatBox');
+            chatBox.scrollTop = chatBox.scrollHeight;
+            openScreen('chatScreen');
+        }
+
+        // Новый пустой чат. В списке появится после первого сообщения
+        function startNewChat() {
+            setActiveChatId(makeChatId());
+            chatHistory = [];
+            clearChatBox();
+            openScreen('chatScreen');
+        }
+
+        function deleteChat(id, event) {
+            if (event) event.stopPropagation();
+            if (!confirm(data[currentLang].confirmDelete)) return;
+
+            const chats = getChats().filter(c => c.id !== id);
+            saveChats(chats);
+
+            if (getActiveChatId() === id) {
+                chatHistory = [];
+                setActiveChatId('');
+                clearChatBox();
+            }
+            renderChatsList();
+        }
+
+        function renderChatsList() {
+            const list = document.getElementById('chatsList');
+            const empty = document.getElementById('chatsEmpty');
+            const chats = getChats();
+            list.innerHTML = '';
+
+            if (chats.length === 0) {
+                empty.style.display = 'block';
+                empty.innerText = data[currentLang].noChats;
+                return;
+            }
+            empty.style.display = 'none';
+
+            chats.forEach(chat => {
+                const row = document.createElement('div');
+                row.className = 'chat-row';
+                row.onclick = () => openChat(chat.id);
+
+                const info = document.createElement('div');
+                info.style.cssText = 'flex:1; min-width:0;';
+
+                const title = document.createElement('div');
+                title.className = 'chat-row-title';
+                title.innerText = chat.title || data[currentLang].untitledChat;
+
+                const meta = document.createElement('div');
+                meta.className = 'chat-row-meta';
+                const d = new Date(chat.updatedAt || Date.now());
+                const count = (chat.messages || []).filter(m => m.role === 'user').length;
+                meta.innerText = d.toLocaleDateString() + ' • ' + count + ' ' + data[currentLang].msgWord;
+
+                info.appendChild(title);
+                info.appendChild(meta);
+
+                const del = document.createElement('button');
+                del.className = 'chat-row-del';
+                del.innerText = '✕';
+                del.onclick = (e) => deleteChat(chat.id, e);
+
+                row.appendChild(info);
+                row.appendChild(del);
+                list.appendChild(row);
+            });
+        }
+
+        // Загрузка при старте: переносим старое и открываем активный чат
+        function loadChatHistory() {
+            migrateOldHistory();
+            const chats = getChats();
+            let chat = chats.find(c => c.id === getActiveChatId()) || chats[0];
+
+            clearChatBox();
+            if (chat) {
+                setActiveChatId(chat.id);
+                chatHistory = (chat.messages || []).map(normalizeMsg);
+                chatHistory.forEach(m => renderMessage(m.role, m.content));
+                const chatBox = document.getElementById('chatBox');
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } else {
+                chatHistory = [];
+            }
+        }
+
+        function openChatsList() {
+            renderChatsList();
+            openScreen('chatsScreen');
         }
 
         async function sendMessage() {
@@ -978,6 +1195,10 @@
             const savedDue = getDueDate();
             if (savedDue) {
                 document.getElementById('due-date-input').value = savedDue;
+            }
+            const savedGender = getGender();
+            if (savedGender) {
+                document.getElementById('gender-select').value = savedGender;
             }
             renderTermCard();
             loadChatHistory();
