@@ -111,6 +111,15 @@
 
         /* КАЛЬКУЛЯТОР */
         .calc-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
+        .theme-box { background: #fff; border-radius: 16px; padding: 14px; margin-top: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .theme-row { display: flex; gap: 8px; }
+        .theme-row .calc-input { flex: 1; min-width: 0; }
+        .theme-go { background: #ff8fa3; color: #fff; border: none; padding: 0 18px; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .theme-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+        .theme-chip { background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; font-size: 12px; padding: 6px 11px; border-radius: 20px; cursor: pointer; }
+        .theme-chip:active { background: #fff1f2; }
+        .theme-active { display: none; align-items: center; gap: 8px; margin-top: 10px; font-size: 12px; color: #64748b; }
+        .theme-reset { background: none; border: none; color: #ff8fa3; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0; }
         .plan-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
         .plan-tab { flex: 1; padding: 11px; border-radius: 14px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 14px; font-weight: 600; cursor: pointer; }
         .plan-tab.active { background: #ff8fa3; border-color: #ff8fa3; color: #fff; }
@@ -428,6 +437,19 @@
                     </div>
 
                     <div class="baby-fact" id="babyFact"></div>
+                </div>
+
+                <div class="theme-box">
+                    <div style="font-size:13px; font-weight:600; color:#334155; margin-bottom:8px;" id="themeLabel">Своя тема для сравнений</div>
+                    <div class="theme-row">
+                        <input type="text" class="calc-input" id="themeInput" placeholder="космос, машины, коты...">
+                        <button class="theme-go" onclick="applyBabyTheme()" id="themeGoBtn">Придумать</button>
+                    </div>
+                    <div class="theme-chips" id="themeChips"></div>
+                    <div class="theme-active" id="themeActive">
+                        <span id="themeActiveText"></span>
+                        <button class="theme-reset" onclick="resetBabyTheme()" id="themeResetBtn">вернуть обычные</button>
+                    </div>
                 </div>
 
                 <p style="font-size: 12px; color: #94a3b8; line-height: 1.4; text-align: center; margin-top: 16px;" id="babyNote">
@@ -1145,6 +1167,16 @@
                 ],
                 capLen: 'рост', capWeight: 'вес',
                 capHome: 'Как вещь под рукой', capKz: 'По-казахстански',
+                themeLabel: 'Своя тема для сравнений',
+                themePlaceholder: 'космос, машины, коты...',
+                themeGo: 'Придумать', themeReset: 'вернуть обычные',
+                themeActiveText: 'Тема: {t}',
+                themeThinking: 'придумываю...',
+                themeFailed: 'не получилось придумать — попробуй другую тему',
+                themeNoKey: 'для своей темы нужен ключ в настройках ⚙️',
+                themeEmpty: 'Напиши тему — например, «космос» или «косметика».',
+                themeTooLong: 'Тема слишком длинная, хватит пары слов.',
+                themeIdeas: ['космос', 'машины', 'коты', 'сладости', 'музыка', 'цветы', 'спорт'],
                 babyNote: 'Цифры средние по неделям — малыши растут по-своему, и это нормально.',
                 kickTap: 'нажми на толчок', kickMore: 'считаем дальше',
                 capElapsed: 'прошло', capGoal: 'цель', kickResetLabel: 'Сброс',
@@ -1230,6 +1262,16 @@
                 ],
                 capLen: 'бойы', capWeight: 'салмағы',
                 capHome: 'Қолдағы затпен салыстырсақ', capKz: 'Қазақша айтсақ',
+                themeLabel: 'Салыстыруға өз тақырыбың',
+                themePlaceholder: 'ғарыш, көліктер, мысықтар...',
+                themeGo: 'Ойлап тап', themeReset: 'әдеттегісін қайтару',
+                themeActiveText: 'Тақырып: {t}',
+                themeThinking: 'ойлап жатырмын...',
+                themeFailed: 'ойлап табу мүмкін болмады — басқа тақырыпты байқап көр',
+                themeNoKey: 'өз тақырыбың үшін баптауларда ⚙️ кілт керек',
+                themeEmpty: 'Тақырып жаз — мысалы, «ғарыш» немесе «косметика».',
+                themeTooLong: 'Тақырып тым ұзын, бір-екі сөз жетеді.',
+                themeIdeas: ['ғарыш', 'көліктер', 'мысықтар', 'тәттілер', 'музыка', 'гүлдер', 'спорт'],
                 babyNote: 'Сандар — апта бойынша орташа көрсеткіш. Әр нәресте өзінше өседі, бұл қалыпты жағдай.',
                 kickTap: 'қимылды бассаң болды', kickMore: 'санап жатырмыз',
                 capElapsed: 'өтті', capGoal: 'мақсат', kickResetLabel: 'Қайта',
@@ -1354,6 +1396,11 @@
             document.getElementById('babyHomeCap').innerText = data[currentLang].capHome;
             document.getElementById('babyKzCap').innerText = data[currentLang].capKz;
             document.getElementById('babyNote').innerText = data[currentLang].babyNote;
+            document.getElementById('themeLabel').innerText = data[currentLang].themeLabel;
+            document.getElementById('themeInput').placeholder = data[currentLang].themePlaceholder;
+            document.getElementById('themeGoBtn').innerText = data[currentLang].themeGo;
+            document.getElementById('themeResetBtn').innerText = data[currentLang].themeReset;
+            if (document.getElementById('babyScreen').classList.contains('active')) renderThemeChips();
             document.getElementById('kickElapsedCap').innerText = data[currentLang].capElapsed;
             document.getElementById('kickGoalCap').innerText = data[currentLang].capGoal;
             document.getElementById('kickResetBtn').innerText = data[currentLang].kickResetLabel;
@@ -1698,7 +1745,145 @@
 
         let babyViewWeek = null;
 
+        // ==========================================
+        // СВОЯ ТЕМА ДЛЯ СРАВНЕНИЙ (генерирует ИИ)
+        // ==========================================
+        const THEME_KEY = 'ayala_baby_theme';
+        const THEME_CACHE_KEY = 'ayala_baby_theme_cache';
+        let themeRequestId = 0;   // защита от гонки при быстром листании недель
+
+        function getBabyTheme() { return localStorage.getItem(THEME_KEY) || ''; }
+
+        function getThemeCache() {
+            try {
+                const v = JSON.parse(localStorage.getItem(THEME_CACHE_KEY));
+                return (v && typeof v === 'object') ? v : {};
+            } catch (e) { return {}; }
+        }
+        function saveThemeCache(c) {
+            try { localStorage.setItem(THEME_CACHE_KEY, JSON.stringify(c)); }
+            catch (e) { console.error('Кеш тем не сохранился:', e); }
+        }
+
+        function applyBabyTheme() {
+            const theme = document.getElementById('themeInput').value.trim();
+            if (!theme) { alert(data[currentLang].themeEmpty); return; }
+            if (theme.length > 40) { alert(data[currentLang].themeTooLong); return; }
+            localStorage.setItem(THEME_KEY, theme);
+            renderBabyWeek();
+        }
+
+        function pickThemeChip(theme) {
+            document.getElementById('themeInput').value = theme;
+            applyBabyTheme();
+        }
+
+        function resetBabyTheme() {
+            localStorage.removeItem(THEME_KEY);
+            document.getElementById('themeInput').value = '';
+            renderBabyWeek();
+        }
+
+        function renderThemeChips() {
+            const box = document.getElementById('themeChips');
+            box.innerHTML = '';
+            data[currentLang].themeIdeas.forEach(t => {
+                const chip = document.createElement('button');
+                chip.className = 'theme-chip';
+                chip.innerText = t;
+                chip.onclick = () => pickThemeChip(t);
+                box.appendChild(chip);
+            });
+        }
+
+        // Просим модель придумать предмет ровно нужной длины
+        async function fetchThemeComparison(theme, week) {
+            const d = BABY_WEEKS[week];
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error('no-key');
+
+            const langName = currentLang === 'kk' ? 'казахском' : 'русском';
+            const prompt = `Малыш на ${week}-й неделе беременности: длина ${d.len} см, вес ${d.w} г.
+Тема для сравнения: "${theme}".
+
+Придумай ОДНО сравнение размера малыша с предметом из этой темы.
+
+Строгие правила:
+1. Предмет должен реально быть примерно ${d.len} см в длину — это самое важное. Не бери предметы заметно больше или меньше.
+2. Ответь одной короткой строкой на ${langName} языке: название предмета и, если уместно, один эмодзи.
+3. Без пояснений, без кавычек, без точки в конце, без слова «размером».
+4. Если тема жестокая, пугающая или неуместная для беременной женщины — ответь одним символом: -`;
+
+            const model = getModel();
+            const body = {
+                model: model,
+                temperature: 0.9,
+                max_completion_tokens: 200,
+                messages: [{ role: 'user', content: prompt }]
+            };
+            if (model.startsWith('qwen')) body.reasoning_effort = 'none';
+
+            const res = await fetch(GROQ_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify(body)
+            });
+            const json = await res.json();
+            if (!res.ok || !json.choices || !json.choices.length) {
+                throw new Error(json.error?.message || 'request-failed');
+            }
+
+            let out = (json.choices[0].message.content || '').trim();
+            if (out.includes('</think>')) out = out.split('</think>').pop().trim();
+            out = out.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+            out = out.split('\n')[0].replace(/^["'«\s]+|["'».\s]+$/g, '').trim();
+
+            if (!out || out === '-' || out.length > 70) throw new Error('bad-answer');
+            return out;
+        }
+
+        // Показ темы: берём из кеша, иначе просим модель
+        async function renderThemeCompare(week) {
+            const theme = getBabyTheme();
+            const capEl = document.getElementById('babyKzCap');
+            const valEl = document.getElementById('babyKz');
+            const activeEl = document.getElementById('themeActive');
+            const t = data[currentLang];
+
+            if (!theme) {
+                activeEl.style.display = 'none';
+                capEl.innerText = t.capKz;
+                valEl.innerText = BABY_WEEKS[week].kz;
+                return;
+            }
+
+            activeEl.style.display = 'flex';
+            document.getElementById('themeActiveText').innerText = t.themeActiveText.replace('{t}', theme);
+            capEl.innerText = theme;
+
+            const cache = getThemeCache();
+            const key = theme.toLowerCase() + '||' + week + '||' + currentLang;
+            if (cache[key]) { valEl.innerText = cache[key]; return; }
+
+            const myId = ++themeRequestId;
+            valEl.innerText = t.themeThinking;
+
+            try {
+                const result = await fetchThemeComparison(theme, week);
+                if (myId !== themeRequestId) return;      // пользователь уже пролистал дальше
+                cache[key] = result;
+                saveThemeCache(cache);
+                valEl.innerText = result;
+            } catch (e) {
+                if (myId !== themeRequestId) return;
+                console.error('Тема не сгенерировалась:', e);
+                valEl.innerText = e.message === 'no-key' ? t.themeNoKey : t.themeFailed;
+            }
+        }
+
         function openBabyScreen() {
+            renderThemeChips();
+            document.getElementById('themeInput').value = getBabyTheme();
             const p = calcPregnancy();
             babyViewWeek = p ? Math.min(40, Math.max(5, p.week + 1)) : 20;
             renderBabyWeek();
@@ -1719,8 +1904,8 @@
             document.getElementById('babyLen').innerText = d.len + ' см';
             document.getElementById('babyWeight').innerText = d.w < 1000 ? d.w + ' г' : (d.w / 1000).toFixed(1) + ' кг';
             document.getElementById('babyHome').innerText = d.home;
-            document.getElementById('babyKz').innerText = d.kz;
             document.getElementById('babyFact').innerText = d.fact;
+            renderThemeCompare(babyViewWeek);
 
             document.getElementById('babyPrev').disabled = babyViewWeek <= 5;
             document.getElementById('babyNext').disabled = babyViewWeek >= 40;
