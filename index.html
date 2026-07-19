@@ -111,6 +111,30 @@
 
         /* КАЛЬКУЛЯТОР */
         .calc-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
+        .baby-card { background: #ffffff; border-radius: 20px; padding: 22px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: center; }
+        .baby-week-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .baby-nav-btn { background: #fff1f2; border: none; color: #ff8fa3; width: 38px; height: 38px; border-radius: 50%; font-size: 18px; cursor: pointer; }
+        .baby-nav-btn:disabled { opacity: 0.3; cursor: default; }
+        .baby-week-label { font-size: 19px; font-weight: 700; color: #334155; }
+        .baby-metrics { display: flex; justify-content: center; gap: 26px; margin: 4px 0 18px 0; }
+        .baby-metric-val { font-size: 21px; font-weight: 700; color: #ff8fa3; }
+        .baby-metric-cap { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .baby-compare { background: #fdf2f8; border-radius: 16px; padding: 14px; margin-bottom: 10px; }
+        .baby-compare-cap { font-size: 11px; color: #be5a7e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .baby-compare-val { font-size: 16px; font-weight: 600; color: #334155; line-height: 1.35; }
+        .baby-fact { font-size: 14px; color: #64748b; line-height: 1.5; margin-top: 14px; padding-top: 14px; border-top: 1px solid #f1f5f9; }
+
+        .kick-big { width: 190px; height: 190px; border-radius: 50%; border: none; margin: 10px auto 20px auto; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; background: linear-gradient(145deg, #ffc2d1, #ff8fa3); color: #fff; cursor: pointer; box-shadow: 0 10px 30px rgba(255,143,163,0.4); transition: transform 0.1s; }
+        .kick-big:active { transform: scale(0.96); }
+        .kick-count { font-size: 46px; font-weight: 800; line-height: 1; }
+        .kick-label { font-size: 13px; opacity: 0.95; }
+        .kick-stats { display: flex; justify-content: center; gap: 30px; margin-bottom: 18px; }
+        .kick-stat-val { font-size: 18px; font-weight: 700; color: #334155; }
+        .kick-stat-cap { font-size: 11px; color: #94a3b8; }
+        .kick-row { background: #fff; border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+        .kick-row-date { font-size: 14px; font-weight: 600; color: #334155; }
+        .kick-row-meta { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+        .kick-row-count { font-size: 15px; font-weight: 700; color: #ff8fa3; }
         .chat-row { background: #ffffff; border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); cursor: pointer; transition: transform 0.1s; }
         .chat-row:active { transform: scale(0.99); }
         .chat-row-title { font-size: 15px; font-weight: 600; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -211,6 +235,18 @@
                     <p id="menuBagDesc">Интерактивный список покупок и вещей для мамы и малыша.</p>
                 </div>
 
+                <div class="menu-item" onclick="openBabyScreen()">
+                    <div class="icon">🌱</div>
+                    <h3 id="menuBabyTitle">Малыш по неделям</h3>
+                    <p id="menuBabyDesc">Размер, вес и на что похож твой малыш прямо сейчас.</p>
+                </div>
+
+                <div class="menu-item" onclick="openKickScreen()">
+                    <div class="icon">👣</div>
+                    <h3 id="menuKickTitle">Дневник шевелений</h3>
+                    <p id="menuKickDesc">Считай толчки малыша с таймером и следи за его ритмом.</p>
+                </div>
+
                 <div class="menu-item" style="grid-column: span 2;" onclick="openScreen('mapScreen')">
                     <div class="icon">📍</div>
                     <h3 id="menuMapTitle">Роддомы и ЖК на карте</h3>
@@ -246,6 +282,84 @@
                     <input type="text" class="chat-input" id="userInput" placeholder="Напишите сообщение...">
                     <button class="send-btn" onclick="sendMessage()">➔</button>
                 </div>
+            </div>
+        </div>
+
+        <div id="babyScreen" class="screen">
+            <header>
+                <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
+                <div class="logo" style="font-size: 18px;" id="babyHeaderTitle">Малыш по неделям</div>
+                <div style="width: 60px;"></div>
+            </header>
+
+            <div class="calc-body">
+                <div class="baby-card">
+                    <div class="baby-week-nav">
+                        <button class="baby-nav-btn" id="babyPrev" onclick="changeBabyWeek(-1)">‹</button>
+                        <div class="baby-week-label" id="babyWeekLabel"></div>
+                        <button class="baby-nav-btn" id="babyNext" onclick="changeBabyWeek(1)">›</button>
+                    </div>
+
+                    <div class="baby-metrics">
+                        <div>
+                            <div class="baby-metric-val" id="babyLen"></div>
+                            <div class="baby-metric-cap" id="babyLenCap">рост</div>
+                        </div>
+                        <div>
+                            <div class="baby-metric-val" id="babyWeight"></div>
+                            <div class="baby-metric-cap" id="babyWeightCap">вес</div>
+                        </div>
+                    </div>
+
+                    <div class="baby-compare">
+                        <div class="baby-compare-cap" id="babyHomeCap">Как вещь под рукой</div>
+                        <div class="baby-compare-val" id="babyHome"></div>
+                    </div>
+
+                    <div class="baby-compare" style="background: #fff7ed;">
+                        <div class="baby-compare-cap" style="color: #b45309;" id="babyKzCap">По-казахстански</div>
+                        <div class="baby-compare-val" id="babyKz"></div>
+                    </div>
+
+                    <div class="baby-fact" id="babyFact"></div>
+                </div>
+
+                <p style="font-size: 12px; color: #94a3b8; line-height: 1.4; text-align: center; margin-top: 16px;" id="babyNote">
+                    Цифры средние по неделям — малыши растут по-своему, и это нормально.
+                </p>
+            </div>
+        </div>
+
+        <div id="kickScreen" class="screen">
+            <header>
+                <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
+                <div class="logo" style="font-size: 18px;" id="kickHeaderTitle">Дневник шевелений</div>
+                <button class="lang-switch" onclick="resetKickSession()" style="font-size: 13px; padding: 8px 10px;" id="kickResetBtn">Сброс</button>
+            </header>
+
+            <div class="calc-body">
+                <button class="kick-big" onclick="registerKick()">
+                    <span class="kick-count" id="kickCount">0</span>
+                    <span class="kick-label" id="kickBtnLabel">нажми на толчок</span>
+                </button>
+
+                <div class="kick-stats">
+                    <div>
+                        <div class="kick-stat-val" id="kickElapsed">—</div>
+                        <div class="kick-stat-cap" id="kickElapsedCap">прошло</div>
+                    </div>
+                    <div>
+                        <div class="kick-stat-val" id="kickGoal">10</div>
+                        <div class="kick-stat-cap" id="kickGoalCap">цель</div>
+                    </div>
+                </div>
+
+                <p style="font-size: 13px; color: #64748b; line-height: 1.5; text-align: center; margin: 0 0 20px 0;" id="kickHelp">
+                    Врачи обычно просят отмечать 10 шевелений подряд и смотреть, за сколько малыш их набирает. Считать удобно в спокойное время, когда ты лежишь на боку. Норма у каждой своя — обсуди её со своим врачом.
+                </p>
+
+                <div id="kickHistory" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                <p id="kickEmpty" style="display: none; text-align: center; color: #94a3b8; font-size: 14px; padding: 20px 10px;">Пока нет записей</p>
             </div>
         </div>
 
@@ -895,6 +1009,18 @@
                 dueDateHelp: 'Эту дату ставит врач в женской консультации. Зная её, приложение само посчитает твою неделю, а Аяла будет учитывать срок в ответах.',
                 newChatBtn: 'Новый',
                 chatsHead: 'Мои чаты', untitledChat: 'Новый чат',
+                babyTitle: 'Малыш по неделям', babyDesc: 'Размер, вес и на что похож твой малыш прямо сейчас.',
+                kickTitle: 'Дневник шевелений', kickDesc: 'Считай толчки малыша с таймером и следи за его ритмом.',
+                babyHead: 'Малыш по неделям', kickHead: 'Дневник шевелений',
+                capLen: 'рост', capWeight: 'вес',
+                capHome: 'Как вещь под рукой', capKz: 'По-казахстански',
+                babyNote: 'Цифры средние по неделям — малыши растут по-своему, и это нормально.',
+                kickTap: 'нажми на толчок', kickMore: 'считаем дальше',
+                capElapsed: 'прошло', capGoal: 'цель', kickResetLabel: 'Сброс',
+                kickHelpText: 'Врачи обычно просят отмечать 10 шевелений подряд и смотреть, за сколько малыш их набирает. Считать удобно в спокойное время, когда ты лежишь на боку. Норма у каждой своя — обсуди её со своим врачом.',
+                kickDone: 'Готово! 10 шевелений за {t} 💕 Запись сохранена.',
+                kickReset: 'Сбросить текущий подсчёт?',
+                kickNoRecords: 'Пока нет записей',
                 noChats: 'Пока нет сохранённых чатов', msgWord: 'сообщ.',
                 confirmDelete: 'Удалить этот чат? Восстановить не получится.',
                 labelGender: 'Пол малыша:',
@@ -943,6 +1069,18 @@
                 dueDateHelp: 'Бұл күнді әйелдер кеңесіндегі дәрігер қояды. Оны білсе, қосымша аптаңды өзі санайды, ал Аяла жауаптарында мерзімді ескереді.',
                 newChatBtn: 'Жаңа',
                 chatsHead: 'Менің чаттарым', untitledChat: 'Жаңа чат',
+                babyTitle: 'Нәресте апта сайын', babyDesc: 'Нәрестеңнің дәл қазіргі бойы, салмағы және неге ұқсайтыны.',
+                kickTitle: 'Қимыл күнделігі', kickDesc: 'Нәрестенің қимылын таймермен сана.',
+                babyHead: 'Нәресте апта сайын', kickHead: 'Қимыл күнделігі',
+                capLen: 'бойы', capWeight: 'салмағы',
+                capHome: 'Қолдағы затпен салыстырсақ', capKz: 'Қазақша айтсақ',
+                babyNote: 'Сандар — апта бойынша орташа көрсеткіш. Әр нәресте өзінше өседі, бұл қалыпты жағдай.',
+                kickTap: 'қимылды бассаң болды', kickMore: 'санап жатырмыз',
+                capElapsed: 'өтті', capGoal: 'мақсат', kickResetLabel: 'Қайта',
+                kickHelpText: 'Дәрігерлер әдетте қатарынан 10 қимылды белгілеп, нәресте оны қанша уақытта жинайтынын қарауды сұрайды. Тыныш уақытта, бір қырыңа жатып санаған ыңғайлы. Әркімнің қалпы әртүрлі — өз дәрігеріңмен ақылдас.',
+                kickDone: 'Дайын! 10 қимыл {t} ішінде 💕 Жазба сақталды.',
+                kickReset: 'Ағымдағы санақ өшірілсін бе?',
+                kickNoRecords: 'Әзірге жазба жоқ',
                 noChats: 'Әзірге сақталған чат жоқ', msgWord: 'хабарлама',
                 confirmDelete: 'Бұл чат өшірілсін бе? Қалпына келтіру мүмкін емес.',
                 labelGender: 'Нәрестенің жынысы:',
@@ -1028,6 +1166,24 @@
             document.getElementById('btnSaveDate').innerText = data[currentLang].btnSaveDate;
             document.getElementById('dueDateHelp').innerText = data[currentLang].dueDateHelp;
             document.getElementById('chatsHeaderTitle').innerText = data[currentLang].chatsHead;
+            document.getElementById('menuBabyTitle').innerText = data[currentLang].babyTitle;
+            document.getElementById('menuBabyDesc').innerText = data[currentLang].babyDesc;
+            document.getElementById('menuKickTitle').innerText = data[currentLang].kickTitle;
+            document.getElementById('menuKickDesc').innerText = data[currentLang].kickDesc;
+            document.getElementById('babyHeaderTitle').innerText = data[currentLang].babyHead;
+            document.getElementById('kickHeaderTitle').innerText = data[currentLang].kickHead;
+            document.getElementById('babyLenCap').innerText = data[currentLang].capLen;
+            document.getElementById('babyWeightCap').innerText = data[currentLang].capWeight;
+            document.getElementById('babyHomeCap').innerText = data[currentLang].capHome;
+            document.getElementById('babyKzCap').innerText = data[currentLang].capKz;
+            document.getElementById('babyNote').innerText = data[currentLang].babyNote;
+            document.getElementById('kickElapsedCap').innerText = data[currentLang].capElapsed;
+            document.getElementById('kickGoalCap').innerText = data[currentLang].capGoal;
+            document.getElementById('kickResetBtn').innerText = data[currentLang].kickResetLabel;
+            document.getElementById('kickHelp').innerText = data[currentLang].kickHelpText;
+            if (babyViewWeek) renderBabyWeek();
+            updateKickView();
+            if (document.getElementById('kickScreen').classList.contains('active')) renderKickHistory();
             document.getElementById('labelGender').innerText = data[currentLang].labelGender;
             document.getElementById('labelModel').innerText = data[currentLang].labelModel;
             document.getElementById('modelHelp').innerText = data[currentLang].modelHelp;
@@ -1319,6 +1475,202 @@
             } else {
                 chatHistory = [];
             }
+        }
+
+        // ==========================================
+        // МАЛЫШ ПО НЕДЕЛЯМ
+        // ==========================================
+        const BABY_WEEKS = {
+            5: { len: 0.2, w: 1, home: "кончик карандаша ✏️", kz: "маковое зёрнышко", fact: "Крошечное сердечко делает самые первые удары 💓" },
+            6: { len: 0.5, w: 1, home: "зёрнышко риса 🌾", kz: "бусина на браслете", fact: "Формируются зачатки глаз и ушек" },
+            7: { len: 1.0, w: 2, home: "ластик на карандаше", kz: "ноготок мизинца", fact: "Появляются ручки и ножки — пока как вёсельца" },
+            8: { len: 1.6, w: 3, home: "SIM-карта 📱", kz: "половинка курта", fact: "Начинает шевелиться, но ты этого ещё не чувствуешь" },
+            9: { len: 2.3, w: 5, home: "канцелярская скрепка 📎", kz: "колечко от ключей", fact: "На пальчиках закладываются будущие отпечатки" },
+            10: { len: 3.1, w: 8, home: "крышка от бутылки", kz: "шарик курта 🧀", fact: "Все главные органы уже заложены — дальше они растут" },
+            11: { len: 4.1, w: 14, home: "спичечный коробок 🔥", kz: "грецкий орех в скорлупе", fact: "Может икать и потягиваться" },
+            12: { len: 5.4, w: 20, home: "флешка 💾", kz: "баурсак 🍩", fact: "Открывает и закрывает кулачки 👐" },
+            13: { len: 7.4, w: 39, home: "зажигалка", kz: "чайная ложка с ручкой 🥄", fact: "Появляются голосовые связки — на будущее" },
+            14: { len: 8.7, w: 61, home: "банковская карта 💳", kz: "дно пиалы", fact: "Умеет хмуриться и морщить носик" },
+            15: { len: 10.1, w: 87, home: "компьютерная мышка 🖱️", kz: "кесе для чая ☕", fact: "Начинает слышать твой голос и стук сердца 👂" },
+            16: { len: 11.6, w: 108, home: "губная помада с футляром 💄", kz: "пиала целиком 🍵", fact: "Различает свет через стенку животика" },
+            17: { len: 13.0, w: 140, home: "ладонь взрослого 🤚", kz: "половник для сорпы", fact: "Появляется первый жирок — согревать себя" },
+            18: { len: 14.2, w: 190, home: "шариковая ручка 🖊️", kz: "тюбетейка сверху 🎩", fact: "Ты можешь впервые почувствовать шевеления 🦋" },
+            19: { len: 15.3, w: 240, home: "смартфон 📱", kz: "круглая лепёшка", fact: "Кожу покрывает защитная смазка" },
+            20: { len: 25.6, w: 300, home: "кухонный нож 🔪", kz: "домбра — до первого лада 🎵", fact: "Ровно половина пути пройдена ✨" },
+            21: { len: 26.7, w: 360, home: "обеденная тарелка 🍽️", kz: "круглый поднос", fact: "Пробует глотать — тренирует пищеварение" },
+            22: { len: 27.8, w: 430, home: "ноутбук по ширине 💻", kz: "казы на блюде", fact: "Появляются бровки и реснички" },
+            23: { len: 28.9, w: 501, home: "лист А4 по длинной стороне 📄", kz: "шанырак в юрте — спица", fact: "Реагирует на громкие звуки — может вздрогнуть" },
+            24: { len: 30.0, w: 600, home: "школьная линейка 📏", kz: "самса на противне", fact: "Лёгкие учатся дышать, пока «вхолостую»" },
+            25: { len: 34.6, w: 660, home: "клавиатура ⌨️", kz: "корпе, сложенное вдвое", fact: "Начинает различать твой голос среди других 💗" },
+            26: { len: 35.6, w: 760, home: "рулон бумажных полотенец", kz: "круглый казахский хлеб", fact: "Впервые приоткрывает глазки 👁️" },
+            27: { len: 36.6, w: 875, home: "кухонное полотенце 🧺", kz: "чапан — рукав", fact: "Появляются первые сны — фаза быстрого сна" },
+            28: { len: 37.6, w: 1005, home: "ноутбук по диагонали 💻", kz: "детская подушка", fact: "Узнаёт твой голос и успокаивается на него" },
+            29: { len: 38.6, w: 1153, home: "зонт в сложенном виде ☂️", kz: "саба для кумыса", fact: "Мозг растёт быстро, косточки крепнут" },
+            30: { len: 39.9, w: 1319, home: "клюшка для гольфа — ручка", kz: "крышка казана 🍲", fact: "Может сосать пальчик и трогать личико" },
+            31: { len: 41.1, w: 1502, home: "пакет молока в высоту 🥛", kz: "казан на четыре литра", fact: "Зрачки реагируют на свет" },
+            32: { len: 42.4, w: 1702, home: "диванная подушка 🛋️", kz: "круглый дастархан — треть", fact: "Обычно переворачивается головкой вниз" },
+            33: { len: 43.7, w: 1918, home: "рюкзак по высоте 🎒", kz: "бешбармак на большом блюде", fact: "Иммунитет получает твои антитела 🛡️" },
+            34: { len: 45.0, w: 2146, home: "гитара — гриф 🎸", kz: "домбра — половина 🎶", fact: "Ноготки дорастают до кончиков пальцев" },
+            35: { len: 46.2, w: 2383, home: "офисный стул — спинка", kz: "сырмак у порога", fact: "Почти всё место в животике занято — толчки чувствуются иначе" },
+            36: { len: 47.4, w: 2622, home: "противень для духовки", kz: "колыбель-бесик изнутри 🛏️", fact: "Считается почти доношенным 🌸" },
+            37: { len: 48.6, w: 2859, home: "ноутбук 17 дюймов 💻", kz: "подушка на тор", fact: "Готов к встрече с миром в любой день" },
+            38: { len: 49.8, w: 3083, home: "стандартная подушка 🛏️", kz: "бесик — во всю длину", fact: "Хватательный рефлекс уже сильный — схватит твой палец" },
+            39: { len: 50.7, w: 3288, home: "клавиатура с цифрами ⌨️", kz: "корпе для малыша", fact: "Набирает последние граммы перед родами" },
+            40: { len: 51.2, w: 3462, home: "дорожная сумка 🧳", kz: "одеяло-конверт на выписку 💕", fact: "Ждёт своего дня. Совсем скоро 💕" },
+        };
+
+        let babyViewWeek = null;
+
+        function openBabyScreen() {
+            const p = calcPregnancy();
+            babyViewWeek = p ? Math.min(40, Math.max(5, p.week + 1)) : 20;
+            renderBabyWeek();
+            openScreen('babyScreen');
+        }
+
+        function changeBabyWeek(delta) {
+            babyViewWeek = Math.min(40, Math.max(5, babyViewWeek + delta));
+            renderBabyWeek();
+        }
+
+        function renderBabyWeek() {
+            const d = BABY_WEEKS[babyViewWeek];
+            if (!d) return;
+            const t = data[currentLang];
+
+            document.getElementById('babyWeekLabel').innerText = babyViewWeek + ' ' + t.weekWord;
+            document.getElementById('babyLen').innerText = d.len + ' см';
+            document.getElementById('babyWeight').innerText = d.w < 1000 ? d.w + ' г' : (d.w / 1000).toFixed(1) + ' кг';
+            document.getElementById('babyHome').innerText = d.home;
+            document.getElementById('babyKz').innerText = d.kz;
+            document.getElementById('babyFact').innerText = d.fact;
+
+            document.getElementById('babyPrev').disabled = babyViewWeek <= 5;
+            document.getElementById('babyNext').disabled = babyViewWeek >= 40;
+        }
+
+        // ==========================================
+        // ДНЕВНИК ШЕВЕЛЕНИЙ
+        // ==========================================
+        const KICKS_KEY = 'ayala_kicks';
+        const KICK_GOAL = 10;
+        let kickSession = null;     // { start, kicks: [время каждого толчка] }
+        let kickTimer = null;
+
+        function getKickLog() {
+            try {
+                const v = JSON.parse(localStorage.getItem(KICKS_KEY));
+                return Array.isArray(v) ? v : [];
+            } catch (e) { return []; }
+        }
+
+        function saveKickLog(log) {
+            try { localStorage.setItem(KICKS_KEY, JSON.stringify(log.slice(0, 60))); }
+            catch (e) { console.error('Не удалось сохранить дневник:', e); }
+        }
+
+        function formatDuration(ms) {
+            const total = Math.floor(ms / 1000);
+            const h = Math.floor(total / 3600);
+            const m = Math.floor((total % 3600) / 60);
+            const s = total % 60;
+            if (h > 0) return h + ':' + String(m).padStart(2, '0');
+            return m + ':' + String(s).padStart(2, '0');
+        }
+
+        function registerKick() {
+            const now = Date.now();
+            if (!kickSession) {
+                kickSession = { start: now, kicks: [] };
+                kickTimer = setInterval(updateKickTimer, 1000);
+            }
+            kickSession.kicks.push(now);
+            updateKickView();
+
+            if (kickSession.kicks.length >= KICK_GOAL) finishKickSession();
+        }
+
+        function updateKickTimer() {
+            if (!kickSession) return;
+            document.getElementById('kickElapsed').innerText = formatDuration(Date.now() - kickSession.start);
+        }
+
+        function updateKickView() {
+            const n = kickSession ? kickSession.kicks.length : 0;
+            document.getElementById('kickCount').innerText = n;
+            document.getElementById('kickBtnLabel').innerText =
+                n === 0 ? data[currentLang].kickTap : data[currentLang].kickMore;
+            if (!kickSession) document.getElementById('kickElapsed').innerText = '—';
+            else updateKickTimer();
+        }
+
+        function finishKickSession() {
+            if (!kickSession) return;
+            const duration = Date.now() - kickSession.start;
+            const log = getKickLog();
+            log.unshift({ date: kickSession.start, count: kickSession.kicks.length, duration: duration });
+            saveKickLog(log);
+
+            clearInterval(kickTimer);
+            kickTimer = null;
+            kickSession = null;
+
+            renderKickHistory();
+            updateKickView();
+            alert(data[currentLang].kickDone.replace('{t}', formatDuration(duration)));
+        }
+
+        function resetKickSession() {
+            if (kickSession && !confirm(data[currentLang].kickReset)) return;
+            clearInterval(kickTimer);
+            kickTimer = null;
+            kickSession = null;
+            updateKickView();
+        }
+
+        function renderKickHistory() {
+            const box = document.getElementById('kickHistory');
+            const empty = document.getElementById('kickEmpty');
+            const log = getKickLog();
+            box.innerHTML = '';
+
+            if (log.length === 0) {
+                empty.style.display = 'block';
+                empty.innerText = data[currentLang].kickNoRecords;
+                return;
+            }
+            empty.style.display = 'none';
+
+            log.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'kick-row';
+
+                const left = document.createElement('div');
+                const d = new Date(item.date);
+                const dateEl = document.createElement('div');
+                dateEl.className = 'kick-row-date';
+                dateEl.innerText = d.toLocaleDateString();
+                const metaEl = document.createElement('div');
+                metaEl.className = 'kick-row-meta';
+                metaEl.innerText = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
+                    ' • ' + formatDuration(item.duration);
+                left.appendChild(dateEl);
+                left.appendChild(metaEl);
+
+                const right = document.createElement('div');
+                right.className = 'kick-row-count';
+                right.innerText = item.count + ' 👣';
+
+                row.appendChild(left);
+                row.appendChild(right);
+                box.appendChild(row);
+            });
+        }
+
+        function openKickScreen() {
+            renderKickHistory();
+            updateKickView();
+            openScreen('kickScreen');
         }
 
         function openChatsList() {
