@@ -6,6 +6,7 @@
     <title>Ayala - Забота о будущих мамах</title>
 <!-- PWA Meta Tags -->
 <link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Ayala">
@@ -103,6 +104,15 @@
 
         /* КАЛЬКУЛЯТОР */
         .calc-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
+        .term-card { background: #ffffff; border-radius: 20px; padding: 18px 20px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.1s; }
+        .term-card:active { transform: scale(0.99); }
+        .term-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+        .term-week { font-size: 20px; font-weight: 700; color: #ff8fa3; }
+        .term-left { font-size: 13px; color: #94a3b8; white-space: nowrap; }
+        .term-sub { font-size: 13px; color: #64748b; margin-top: 4px; line-height: 1.4; }
+        .term-bar { height: 6px; background: #f1f5f9; border-radius: 3px; margin-top: 12px; overflow: hidden; }
+        .term-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffc2d1, #ff8fa3); border-radius: 3px; transition: width 0.5s ease; }
+        .term-empty { background: #ffffff; border: 1px dashed #ffb3c6; border-radius: 16px; padding: 14px; margin-bottom: 20px; text-align: center; font-size: 13px; color: #64748b; cursor: pointer; }
         .input-group { display: flex; flex-direction: column; gap: 8px; }
         .input-group label { font-size: 14px; font-weight: 600; color: #4e5d6c; }
         .calc-input { border: 1px solid #e2e8f0; padding: 14px; border-radius: 16px; font-size: 16px; outline: none; transition: border 0.2s; }
@@ -156,6 +166,19 @@
                 <p id="welcomeDesc">Твой уютный цифровой помощник на пути к самому главному чуду.</p>
             </div>
 
+            <div class="term-card" id="termCard" style="display: none;" onclick="openScreen('settingsScreen')">
+                <div class="term-top">
+                    <div class="term-week" id="termWeek"></div>
+                    <div class="term-left" id="termLeft"></div>
+                </div>
+                <div class="term-sub" id="termSub"></div>
+                <div class="term-bar"><div class="term-bar-fill" id="termBarFill"></div></div>
+            </div>
+
+            <div class="term-empty" id="termEmpty" style="display: none;" onclick="openScreen('settingsScreen')">
+                <span id="termEmptyText">📅 Укажи дату родов — и Аяла будет знать твой срок</span>
+            </div>
+
             <div class="menu-grid">
                 <div class="menu-item ai-special" onclick="openScreen('chatScreen')">
                     <div class="icon">✨</div>
@@ -186,14 +209,14 @@
         <div id="chatScreen" class="screen">
             <header>
                 <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
-                <div class="logo" style="font-size: 20px;">ayala.ai</div>
-                <div style="width: 60px;"></div>
+                <div class="logo" style="font-size: 20px;">ayala</div>
+                <button class="lang-switch" id="newChatBtn" onclick="newChat()" style="font-size: 13px; padding: 8px 12px;">Новый</button>
             </header>
 
             <div class="chat-container">
                 <div class="chat-messages" id="chatBox">
                     <div class="message ai" id="aiGreeting">
-                        Привет! Менің атым Аяла. Нажми кнопку языка сверху, если хочешь сменить язык. Я готова ответить на любые вопросы о малыше и беременности! 💕
+                        Привет, дорогая! Меня зовут Аяла 💕 Спрашивай о чём угодно — о малыше, своём самочувствии или декретных выплатах. Я рядом.
                     </div>
                 </div>
                 <div class="chat-input-area">
@@ -322,6 +345,17 @@
 
             <div class="calc-body">
                 <div class="input-group">
+                    <label id="labelDueDate">Предполагаемая дата родов (ПДР):</label>
+                    <input type="date" class="calc-input" id="due-date-input">
+                </div>
+
+                <button class="calc-btn" onclick="saveDueDate()" id="btnSaveDate">Сохранить дату</button>
+
+                <p style="font-size: 12px; color: #64748b; line-height: 1.4; margin: 10px 0 20px 0;" id="dueDateHelp">
+                    Эту дату ставит врач в женской консультации. Зная её, приложение само посчитает твою неделю, а Аяла будет учитывать срок в ответах.
+                </p>
+
+                <div class="input-group">
                     <label id="labelApiKey">Groq API Ключ:</label>
                     <input type="password" class="calc-input" id="api-key-input" placeholder="Вставьте ваш Groq API ключ (gsk_...)">
                 </div>
@@ -387,6 +421,98 @@
         const GROQ_MODEL = 'openai/gpt-oss-120b';
 
         // Получение ключа из памяти браузера
+        // ==========================================
+        // СРОК БЕРЕМЕННОСТИ
+        // ==========================================
+        const DUE_DATE_KEY = 'ayala_due_date';
+
+        function getDueDate() {
+            return localStorage.getItem(DUE_DATE_KEY) || '';
+        }
+
+        function saveDueDate() {
+            const value = document.getElementById('due-date-input').value;
+            if (value) {
+                localStorage.setItem(DUE_DATE_KEY, value);
+                alert(currentLang === 'ru' ? 'Дата сохранена!' : 'Күн сақталды!');
+            } else {
+                localStorage.removeItem(DUE_DATE_KEY);
+                alert(currentLang === 'ru' ? 'Дата удалена.' : 'Күн өшірілді.');
+            }
+            renderTermCard();
+        }
+
+        // Считаем акушерский срок: беременность = 280 дней до ПДР
+        function calcPregnancy() {
+            const due = getDueDate();
+            if (!due) return null;
+
+            const dueMs = new Date(due + 'T00:00:00').getTime();
+            if (isNaN(dueMs)) return null;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const daysLeft = Math.round((dueMs - today.getTime()) / 86400000);
+            const totalDays = 280 - daysLeft;
+
+            // защита от бессмысленных дат (опечатка в годе и т.п.)
+            if (totalDays < 0 || totalDays > 315) return null;
+
+            const week = Math.floor(totalDays / 7);
+            const days = totalDays % 7;
+            const trimester = week < 13 ? 1 : (week < 28 ? 2 : 3);
+            const progress = Math.max(0, Math.min(100, (totalDays / 280) * 100));
+
+            return { week, days, daysLeft, trimester, progress };
+        }
+
+        function renderTermCard() {
+            const card = document.getElementById('termCard');
+            const empty = document.getElementById('termEmpty');
+            const p = calcPregnancy();
+
+            if (!p) {
+                card.style.display = 'none';
+                empty.style.display = 'block';
+                document.getElementById('termEmptyText').innerText = data[currentLang].termEmpty;
+                return;
+            }
+
+            empty.style.display = 'none';
+            card.style.display = 'block';
+
+            const t = data[currentLang];
+            document.getElementById('termWeek').innerText = (p.week + 1) + ' ' + t.weekWord;
+
+            if (p.daysLeft > 0) {
+                const weeksLeft = Math.ceil(p.daysLeft / 7);
+                const parts = [];
+                if (t.leftWord) parts.push(t.leftWord);
+                parts.push(weeksLeft, t.weeksShort);
+                if (t.leftSuffix) parts.push(t.leftSuffix);
+                document.getElementById('termLeft').innerText = parts.join(' ');
+            } else {
+                document.getElementById('termLeft').innerText = t.soonWord;
+            }
+
+            document.getElementById('termSub').innerText =
+                p.trimester + ' ' + t.trimesterWord + ' • ' + p.week + ' ' + t.weeksShort + ' ' + p.days + ' ' + t.daysShort;
+            document.getElementById('termBarFill').style.width = p.progress + '%';
+        }
+
+        // Добавляем срок в системный промпт, чтобы Аяла его учитывала
+        function buildSystemPrompt() {
+            const p = calcPregnancy();
+            if (!p) return SYSTEM_PROMPT;
+
+            return SYSTEM_PROMPT + `
+
+## СРОК СОБЕСЕДНИЦЫ ((данные из приложения, им можно доверять))
+Сейчас у неё ${p.week} полных недель и ${p.days} дней беременности — то есть идёт ${p.week + 1}-я неделя, ${p.trimester} триместр. До предполагаемой даты родов около ${p.daysLeft} дней.
+Учитывай этот срок в каждом ответе и НЕ спрашивай его заново — ты его уже знаешь. Рассказывай о том, что происходит с малышом и с её телом именно сейчас, и что уместно делать на этом сроке.`;
+        }
+
         function getApiKey() {
             return localStorage.getItem('groq_api_key') || '';
         }
@@ -505,7 +631,15 @@
                 calcTitle: 'Декретные в РК', calcDesc: 'Рассчитай точный размер пособий по законам Казахстана.',
                 bagTitle: 'В роддом', bagDesc: 'Интерактивный список покупок и вещей для мамы и малыша.',
                 mapTitle: 'Роддомы и ЖК на карте', mapDesc: 'Рейтинги, контакты и честные отзывы из базы 2ГИС в твоем городе.',
-                greeting: 'Привет! Менің атым Аяла. Я готова ответить на любые вопросы о малыше, твоем здоровье или декретных выплатах в Казахстане! 💕',
+                greeting: 'Привет, дорогая! Меня зовут Аяла 💕 Спрашивай о чём угодно — о малыше, своём самочувствии или декретных выплатах. Я рядом.',
+                termEmpty: '📅 Укажи дату родов — и Аяла будет знать твой срок',
+                weekWord: 'неделя', weeksShort: 'нед.', daysShort: 'дн.',
+                leftWord: 'осталось', leftSuffix: '', soonWord: 'уже совсем скоро! 💕',
+                trimesterWord: 'триместр',
+                labelDueDate: 'Предполагаемая дата родов (ПДР):',
+                btnSaveDate: 'Сохранить дату',
+                dueDateHelp: 'Эту дату ставит врач в женской консультации. Зная её, приложение само посчитает твою неделю, а Аяла будет учитывать срок в ответах.',
+                newChatBtn: 'Новый',
                 calcHead: 'Калькулятор РК', labelInc: 'Среднемесячный доход за 12 месяцев (₸):', btnCalc: 'Рассчитать выплаты',
                 r1: 'Выплата по беременности (на руки):', r2: 'Удержанный ОПВ (10% пенсионка):',
                 disc: '*Расчет является предварительным и базируется на стандартном коэффициенте 4.2 (126 дней больничного).',
@@ -526,7 +660,15 @@
                 calcTitle: 'ҚР декреттік төлемдер', calcDesc: 'Қазақстан заңдары бойынша жәрдемақылардың нақты көлемін есепте.',
                 bagTitle: 'Перзентханаға', bagDesc: 'Ана мен балаға арналған заттардың интерактивті тізімі.',
                 mapTitle: 'Перзентханалар мен Емханалар', mapDesc: 'Сенің қалаңдағы 2ГИС базасынан рейтингтер, контактілер мен шынайы пікірлер.',
-                greeting: 'Сәлем! Менің атым Аяла. Мен саған жүктілік, денсаулық немесе Қазақстандағы декреттік төлемдер туралы кез келген сұрақты нақты уақытта қоюға дайынмын! 💕',
+                greeting: 'Сәлем, қымбаттым! Менің атым Аяла 💕 Нәресте туралы, өз жағдайың немесе декреттік төлемдер туралы кез келген нәрсені сұра. Мен осындамын.',
+                termEmpty: '📅 Босану күнін көрсет — сонда Аяла мерзіміңді біледі',
+                weekWord: 'апта', weeksShort: 'апта', daysShort: 'күн',
+                leftWord: '', leftSuffix: 'қалды', soonWord: 'жақында кездесесіңдер! 💕',
+                trimesterWord: 'триместр',
+                labelDueDate: 'Болжамды босану күні (ББК):',
+                btnSaveDate: 'Күнді сақтау',
+                dueDateHelp: 'Бұл күнді әйелдер кеңесіндегі дәрігер қояды. Оны білсе, қосымша аптаңды өзі санайды, ал Аяла жауаптарында мерзімді ескереді.',
+                newChatBtn: 'Жаңа',
                 calcHead: 'ҚР Калькуляторы', labelInc: '12 айдағы орташа айлық табыс (₸):', btnCalc: 'Төлемдерді есептеу',
                 r1: 'Жүктілік бойынша төлем (қолға):', r2: 'Ұсталған МЗЖ (10% зейнетақы):',
                 disc: '*Есептеу алдын ала жүргізілген және 4.2 стандартты коэффициентке (126 күндік еңбекке жарамсыздық парағы) негеделген.',
@@ -588,6 +730,13 @@
             document.getElementById('labelApiKey').innerText = data[currentLang].labelApi;
             document.getElementById('btnSaveKey').innerText = data[currentLang].btnSave;
             document.getElementById('settingsHelp').innerHTML = data[currentLang].settingsHelp;
+
+            // Перевод блока срока
+            document.getElementById('labelDueDate').innerText = data[currentLang].labelDueDate;
+            document.getElementById('btnSaveDate').innerText = data[currentLang].btnSaveDate;
+            document.getElementById('dueDateHelp').innerText = data[currentLang].dueDateHelp;
+            document.getElementById('newChatBtn').innerText = data[currentLang].newChatBtn;
+            renderTermCard();
 
             if (chatHistory.length === 0) {
                  document.getElementById('aiGreeting').innerText = data[currentLang].greeting;
@@ -686,6 +835,15 @@
         }
 
         // Очистка истории — пригодится для кнопки "Новый чат"
+        function newChat() {
+            const msg = currentLang === 'ru'
+                ? 'Начать новый чат? Текущая переписка будет удалена.'
+                : 'Жаңа чат бастау керек пе? Ағымдағы жазысу өшіріледі.';
+            if (chatHistory.length === 0 || confirm(msg)) {
+                clearChatHistory();
+            }
+        }
+
         function clearChatHistory() {
             chatHistory = [];
             localStorage.removeItem(CHAT_STORAGE_KEY);
@@ -752,7 +910,7 @@
                         // запас на развёрнутый ответ
                         max_completion_tokens: 2048,
                         messages: [
-                            { role: 'system', content: SYSTEM_PROMPT },
+                            { role: 'system', content: buildSystemPrompt() },
                             // шлём только последние 12 сообщений: экономит лимит токенов в минуту
                             ...chatHistory.slice(-12)
                         ]
@@ -817,6 +975,11 @@
             if (savedKey) {
                 document.getElementById('api-key-input').value = savedKey;
             }
+            const savedDue = getDueDate();
+            if (savedDue) {
+                document.getElementById('due-date-input').value = savedDue;
+            }
+            renderTermCard();
             loadChatHistory();
         });
 
