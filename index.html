@@ -854,6 +854,12 @@
                 photoReady: 'Фото прикреплено',
                 photoChat: 'Фото',
                 lookAtPhoto: 'Посмотри, пожалуйста, на это фото.',
+                errKey: 'Ключ не подошёл. Проверь его в настройках ⚙️ — возможно, скопировался не полностью.',
+                errModel: 'Выбранная модель недоступна. Попробуй другую в настройках ⚙️.',
+                errTooBig: 'Фото слишком тяжёлое для отправки. Попробуй снимок поменьше.',
+                errLimit: 'Превышен бесплатный лимит запросов. Подожди минуту и напиши снова.',
+                errBadRequest: 'Запрос не принят. Если отправляла фото — возможно, выбранная модель его не понимает.',
+                errGeneric: 'Не получилось связаться с ИИ. Проверь интернет и попробуй ещё раз. 😔',
                 modelHelp: 'Если ответы на казахском получаются с ошибками — попробуй Qwen: он знает больше языков. Переключение бесплатное, ключ тот же.',
                 optUnknown: 'Пока не знаю', optGirl: 'Девочка', optBoy: 'Мальчик',
                 calcHead: 'Калькулятор РК', labelInc: 'Среднемесячный доход за 12 месяцев (₸):', btnCalc: 'Рассчитать выплаты',
@@ -896,6 +902,12 @@
                 photoReady: 'Сурет тіркелді',
                 photoChat: 'Сурет',
                 lookAtPhoto: 'Мына суретке қарашы.',
+                errKey: 'Кілт жарамады. Баптаулардан ⚙️ тексеріп көр — толық көшірілмеген болуы мүмкін.',
+                errModel: 'Таңдалған модель қолжетімсіз. Баптаулардан ⚙️ басқасын байқап көр.',
+                errTooBig: 'Сурет жіберуге тым ауыр. Кішірек суретті байқап көр.',
+                errLimit: 'Тегін сұраныс шегінен асып кеттің. Бір минут күтіп, қайта жаз.',
+                errBadRequest: 'Сұраныс қабылданбады. Сурет жіберген болсаң — таңдалған модель оны түсінбеуі мүмкін.',
+                errGeneric: 'ЖИ-мен байланысу мүмкін болмады. Интернетті тексеріп, қайта байқап көр. 😔',
                 modelHelp: 'Қазақша жауаптарда қате көп болса — Qwen моделін байқап көр: ол көбірек тіл біледі. Ауыстыру тегін, кілт сол күйінде қалады.',
                 optUnknown: 'Әзірге білмеймін', optGirl: 'Қыз', optBoy: 'Ұл',
                 calcHead: 'ҚР Калькуляторы', labelInc: '12 айдағы орташа айлық табыс (₸):', btnCalc: 'Төлемдерді есептеу',
@@ -1312,15 +1324,18 @@
             try {
                 let model = getModel();
                 // gpt-oss картинки не понимает — на фото временно берём Qwen
-                const hasImage = chatHistory.some(m => msgImage(m.content));
+                // Смотрим ТОЛЬКО последнее сообщение: иначе одно фото заставляло
+                // каждый следующий вопрос тоже уходить с картинкой и в Qwen
+                const lastMsg = chatHistory[chatHistory.length - 1];
+                const hasImage = !!(lastMsg && msgImage(lastMsg.content));
                 if (hasImage && !isVisionModel(model)) model = VISION_MODEL;
 
                 // В запрос отправляем картинки только из двух последних сообщений:
                 // старые фото зря съедают лимит токенов
                 const recent = chatHistory.slice(-12);
                 const outbound = recent.map((m, i) => {
-                    if (i >= recent.length - 2 || !msgImage(m.content)) return m;
-                    return { role: m.role, content: msgText(m.content) };
+                    if (i === recent.length - 1 || !msgImage(m.content)) return m;
+                    return { role: m.role, content: msgText(m.content) };  // старые фото — только текстом
                 });
 
                 const requestBody = {
@@ -1377,8 +1392,10 @@
                     aiMsg.innerHTML = aiText.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
                     chatBox.appendChild(aiMsg);
                 } else {
-                    console.error("Ошибка сервера:", responseData);
-                    throw new Error(responseData.error?.message || "Ошибка запроса");
+                    console.error("Ошибка сервера:", response.status, responseData);
+                    const err = new Error(responseData.error?.message || "Ошибка запроса");
+                    err.status = response.status;
+                    throw err;
                 }
 
             } catch (error) {
@@ -1387,12 +1404,24 @@
                 let currentLoading = document.getElementById('loadingPlaceholder');
                 if (currentLoading) { currentLoading.remove(); }
                 
+                const t = data[currentLang];
+                let friendly;
+                switch (error.status) {
+                    case 401: friendly = t.errKey; break;
+                    case 404: friendly = t.errModel; break;
+                    case 413: friendly = t.errTooBig; break;
+                    case 429: friendly = t.errLimit; break;
+                    case 400: friendly = t.errBadRequest; break;
+                    default:  friendly = t.errGeneric;
+                }
+
                 let errorMsg = document.createElement('div');
                 errorMsg.className = 'message ai';
-                errorMsg.innerText = currentLang === 'ru' ? 
-                    `Ошибка соединения или неверный API-ключ. Проверьте настройки или консоль. 😔` : 
-                    `Байланыс қатесі немесе қате API-кілт. Консольді немесе баптауларды тексеріңіз. 😔`;
+                errorMsg.innerHTML = friendly +
+                    '<div style="margin-top:8px; font-size:11px; opacity:0.6; word-break:break-word;">' +
+                    (error.message || '') + '</div>';
                 chatBox.appendChild(errorMsg);
+                chatBox.scrollTop = chatBox.scrollHeight;
             }
             
             chatBox.scrollTop = chatBox.scrollHeight;
