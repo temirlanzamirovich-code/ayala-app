@@ -1174,6 +1174,7 @@
                 themeThinking: 'придумываю...',
                 themeFailed: 'не получилось придумать — попробуй другую тему',
                 themeNoKey: 'для своей темы нужен ключ в настройках ⚙️',
+                themeLimit: 'лимит запросов исчерпан — подожди минуту и полистай снова',
                 themeEmpty: 'Напиши тему — например, «космос» или «косметика».',
                 themeTooLong: 'Тема слишком длинная, хватит пары слов.',
                 themeIdeas: ['космос', 'машины', 'коты', 'сладости', 'музыка', 'цветы', 'спорт'],
@@ -1269,6 +1270,7 @@
                 themeThinking: 'ойлап жатырмын...',
                 themeFailed: 'ойлап табу мүмкін болмады — басқа тақырыпты байқап көр',
                 themeNoKey: 'өз тақырыбың үшін баптауларда ⚙️ кілт керек',
+                themeLimit: 'сұраныс шегі бітті — бір минут күтіп, қайта қара',
                 themeEmpty: 'Тақырып жаз — мысалы, «ғарыш» немесе «косметика».',
                 themeTooLong: 'Тақырып тым ұзын, бір-екі сөз жетеді.',
                 themeIdeas: ['ғарыш', 'көліктер', 'мысықтар', 'тәттілер', 'музыка', 'гүлдер', 'спорт'],
@@ -1818,10 +1820,17 @@
             const body = {
                 model: model,
                 temperature: 0.9,
-                max_completion_tokens: 200,
+                // gpt-oss тратит токены на внутренние размышления, и они входят в этот лимит.
+                // При маленьком значении до самого ответа дело просто не доходит.
+                max_completion_tokens: 1200,
                 messages: [{ role: 'user', content: prompt }]
             };
-            if (model.startsWith('qwen')) body.reasoning_effort = 'none';
+            if (model.startsWith('qwen')) {
+                body.reasoning_effort = 'none';
+                body.max_completion_tokens = 300;
+            } else {
+                body.reasoning_effort = 'low';   // задача простая, думать долго незачем
+            }
 
             const res = await fetch(GROQ_API_URL, {
                 method: 'POST',
@@ -1834,11 +1843,24 @@
             }
 
             let out = (json.choices[0].message.content || '').trim();
+            if (!out) throw new Error('empty-answer');
+
             if (out.includes('</think>')) out = out.split('</think>').pop().trim();
             out = out.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-            out = out.split('\n')[0].replace(/^["'«\s]+|["'».\s]+$/g, '').trim();
 
-            if (!out || out === '-' || out.length > 70) throw new Error('bad-answer');
+            // Берём последнюю непустую строку: модель часто рассуждает,
+            // а сам ответ выдаёт в конце
+            const lines = out.split('\n').map(s => s.trim()).filter(Boolean);
+            out = lines.length ? lines[lines.length - 1] : '';
+
+            // Срезаем служебные приставки и кавычки
+            out = out.replace(/^(сравнение|ответ|итог|предмет)\s*[:—-]\s*/i, '');
+            out = out.replace(/^["'«\s]+|["'».\s]+$/g, '').trim();
+
+            // Если всё же вышло длинно — оставляем первую часть до запятой или тире
+            if (out.length > 60) out = out.split(/[,—(]/)[0].trim();
+
+            if (!out || out === '-' || out.length > 60) throw new Error('bad-answer');
             return out;
         }
 
@@ -1877,7 +1899,9 @@
             } catch (e) {
                 if (myId !== themeRequestId) return;
                 console.error('Тема не сгенерировалась:', e);
-                valEl.innerText = e.message === 'no-key' ? t.themeNoKey : t.themeFailed;
+                if (e.message === 'no-key') valEl.innerText = t.themeNoKey;
+                else if (/tokens per minute|rate limit|429/i.test(e.message)) valEl.innerText = t.themeLimit;
+                else valEl.innerText = t.themeFailed;
             }
         }
 
