@@ -382,6 +382,9 @@
 
                     <div id="visitsList"></div>
                     <p id="visitsEmpty" style="display:none; text-align:center; color:#94a3b8; font-size:14px; padding:24px 10px;">Пока нет запланированных визитов</p>
+                    <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin-top:14px;" id="visitsNote">
+                        Нажми 🔔 у визита — он добавится в календарь телефона, и напоминание придёт за сутки и за два часа. Напоминает сам телефон, поэтому оно сработает, даже если приложение закрыто.
+                    </p>
                 </div>
 
                 <div id="testsSection" style="display: none;">
@@ -1380,6 +1383,11 @@
                 confirmDeleteItem: 'Удалить эту запись?',
                 confirmTemplate: 'Добавить типовой список обследований? Сроки ориентировочные — обязательно сверь их со своим врачом и поправь.',
                 today: 'сегодня', tomorrow: 'завтра', inDays: 'через {n} дн.',
+                addToCalendar: 'Напомнить — добавить в календарь',
+                icsDesc: 'Визит из приложения Ayala',
+                icsHint: 'Файл скачан. Открой его — телефон предложит добавить визит в календарь и сам напомнит за сутки и за два часа 💕',
+                icsFailed: 'Не получилось создать файл календаря.',
+                visitsNote: 'Нажми 🔔 у визита — он добавится в календарь телефона, и напоминание придёт за сутки и за два часа. Напоминает сам телефон, поэтому оно сработает, даже если приложение закрыто.',
                 weeksRange: '{a}–{b} неделя', weekSingle: '{a} неделя', nowRelevant: 'сейчас актуально',
                 testsNote: 'Это список для себя, а не назначение. Точный перечень и сроки даёт твой врач — сверься с ним и поправь под себя.',
                 templateTests: [
@@ -1508,6 +1516,11 @@
                 confirmDeleteItem: 'Бұл жазба өшірілсін бе?',
                 confirmTemplate: 'Тексерулердің үлгі тізімі қосылсын ба? Мерзімдер шамамен — өз дәрігеріңмен міндетті түрде салыстырып, түзет.',
                 today: 'бүгін', tomorrow: 'ертең', inDays: '{n} күннен кейін',
+                addToCalendar: 'Еске салу — күнтізбеге қосу',
+                icsDesc: 'Ayala қосымшасынан қабылдау',
+                icsHint: 'Файл жүктелді. Оны аш — телефон қабылдауды күнтізбеге қосуды ұсынады және бір тәулік пен екі сағат бұрын өзі еске салады 💕',
+                icsFailed: 'Күнтізбе файлын жасау мүмкін болмады.',
+                visitsNote: 'Қабылдаудың жанындағы 🔔 басып қал — ол телефон күнтізбесіне қосылады, еске салу бір тәулік және екі сағат бұрын келеді. Еске салатын — телефонның өзі, сондықтан қосымша жабық болса да жұмыс істейді.',
                 weeksRange: '{a}–{b} апта', weekSingle: '{a} апта', nowRelevant: 'қазір өзекті',
                 testsNote: 'Бұл — өзің үшін жасалған тізім, дәрігердің тағайындауы емес. Нақты тізім мен мерзімді дәрігерің береді — онымен салыстырып, өзіңе қарай түзет.',
                 templateTests: [
@@ -1672,6 +1685,7 @@
             document.getElementById('btnCancelTest').innerText = data[currentLang].btnCancel;
             document.getElementById('btnTemplate').innerText = data[currentLang].btnTemplate;
             document.getElementById('testsNote').innerText = data[currentLang].testsNote;
+            document.getElementById('visitsNote').innerText = data[currentLang].visitsNote;
             if (document.getElementById('planScreen').classList.contains('active')) { renderVisits(); renderTests(); }
             document.getElementById('babyHeaderTitle').innerText = data[currentLang].babyHead;
             document.getElementById('kickHeaderTitle').innerText = data[currentLang].kickHead;
@@ -2406,6 +2420,71 @@
             return Math.round((target - today) / 86400000);
         }
 
+        // Календарь телефона напомнит сам — без сервера и без интернета
+        function addVisitToCalendar(id, event) {
+            if (event) event.stopPropagation();
+            const v = loadList(VISITS_KEY).find(x => x.id === id);
+            if (!v) return;
+
+            const pad = n => String(n).padStart(2, '0');
+            const esc = s => (s || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+
+            const [y, m, d] = v.date.split('-').map(Number);
+            let dtStart, dtEnd, allDay = false;
+
+            if (v.time) {
+                const [hh, mm] = v.time.split(':').map(Number);
+                const start = new Date(y, m - 1, d, hh, mm);
+                const end = new Date(start.getTime() + 60 * 60000);
+                const fmt = dt => `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}00`;
+                dtStart = 'DTSTART:' + fmt(start);
+                dtEnd = 'DTEND:' + fmt(end);
+            } else {
+                allDay = true;
+                const next = new Date(y, m - 1, d + 1);
+                dtStart = 'DTSTART;VALUE=DATE:' + `${y}${pad(m)}${pad(d)}`;
+                dtEnd = 'DTEND;VALUE=DATE:' + `${next.getFullYear()}${pad(next.getMonth() + 1)}${pad(next.getDate())}`;
+            }
+
+            const now = new Date();
+            const stamp = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}00Z`;
+
+            // два напоминания: за день и за два часа (для события без времени — только за день)
+            const alarms = allDay
+                ? ['BEGIN:VALARM', 'TRIGGER:-P1D', 'ACTION:DISPLAY', 'DESCRIPTION:' + esc(v.title), 'END:VALARM']
+                : ['BEGIN:VALARM', 'TRIGGER:-P1D', 'ACTION:DISPLAY', 'DESCRIPTION:' + esc(v.title), 'END:VALARM',
+                   'BEGIN:VALARM', 'TRIGGER:-PT2H', 'ACTION:DISPLAY', 'DESCRIPTION:' + esc(v.title), 'END:VALARM'];
+
+            const ics = [
+                'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Ayala//Pregnancy//RU', 'CALSCALE:GREGORIAN',
+                'BEGIN:VEVENT',
+                'UID:' + v.id + '@ayala',
+                'DTSTAMP:' + stamp,
+                dtStart, dtEnd,
+                'SUMMARY:' + esc(v.title),
+                v.place ? 'LOCATION:' + esc(v.place) : '',
+                'DESCRIPTION:' + esc(data[currentLang].icsDesc),
+                ...alarms,
+                'END:VEVENT', 'END:VCALENDAR'
+            ].filter(Boolean).join('\r\n');
+
+            try {
+                const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ayala-visit.ics';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 3000);
+                setTimeout(() => alert(data[currentLang].icsHint), 400);
+            } catch (e) {
+                console.error('Не удалось создать файл календаря:', e);
+                alert(data[currentLang].icsFailed);
+            }
+        }
+
         function renderVisits() {
             const box = document.getElementById('visitsList');
             const empty = document.getElementById('visitsEmpty');
@@ -2454,12 +2533,19 @@
                     main.appendChild(badge);
                 }
 
+                const bell = document.createElement('button');
+                bell.className = 'item-del';
+                bell.innerText = '🔔';
+                bell.title = data[currentLang].addToCalendar;
+                bell.onclick = (e) => addVisitToCalendar(v.id, e);
+
                 const del = document.createElement('button');
                 del.className = 'item-del';
                 del.innerText = '✕';
                 del.onclick = () => deleteVisit(v.id);
 
                 card.appendChild(main);
+                card.appendChild(bell);
                 card.appendChild(del);
                 box.appendChild(card);
             });
