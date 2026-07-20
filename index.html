@@ -2289,7 +2289,7 @@
             if (getBabyTheme()) { nextThemeVariant(); return; }
             const d = BABY_WEEKS[babyViewWeek];
             if (!d) return;
-            const total = (d.fruit ? d.fruit.length : 0) + 1;
+            const total = (d.fruit && d.fruit.length) ? d.fruit.length : 1;
             secondIdx = (secondIdx + 1) % total;
             renderSecondCard();
         }
@@ -2297,17 +2297,9 @@
         function renderSecondCard() {
             const d = BABY_WEEKS[babyViewWeek];
             const t = data[currentLang];
-            const fruits = d.fruit || [];
-            const capEl = document.getElementById('babyKzCap');
-            const valEl = document.getElementById('babyKz');
-
-            if (secondIdx < fruits.length) {
-                capEl.innerText = t.capFruit;
-                valEl.innerText = fruits[secondIdx];
-            } else {
-                capEl.innerText = t.capKz;
-                valEl.innerText = d.kz;
-            }
+            const fruits = (d.fruit && d.fruit.length) ? d.fruit : [d.kz];
+            document.getElementById('babyKzCap').innerText = t.capFruit;
+            document.getElementById('babyKz').innerText = fruits[secondIdx % fruits.length];
         }
 
         function renderBabyWeek() {
