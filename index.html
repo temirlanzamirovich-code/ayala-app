@@ -111,6 +111,26 @@
 
         /* КАЛЬКУЛЯТОР */
         .calc-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
+        .bag-tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+        .bag-tab { flex: 1; min-width: 78px; padding: 10px 8px; border-radius: 13px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .bag-tab.active { background: #ff8fa3; border-color: #ff8fa3; color: #fff; }
+        .bag-progress { background: #fff; border-radius: 16px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+        .bag-progress-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+        .bag-progress-txt { font-size: 14px; font-weight: 600; color: #334155; }
+        .bag-progress-pct { font-size: 13px; color: #94a3b8; }
+        .bag-bar { height: 7px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+        .bag-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffc2d1, #ff8fa3); border-radius: 4px; transition: width 0.4s; }
+        .bag-item { background: #fff; border-radius: 15px; padding: 12px 14px; display: flex; gap: 11px; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 9px; }
+        .bag-item-main { flex: 1; min-width: 0; }
+        .bag-item-title { font-size: 14px; font-weight: 600; color: #334155; line-height: 1.3; }
+        .bag-item-title.packed { text-decoration: line-through; color: #94a3b8; }
+        .bag-place { display: inline-block; background: #eef6ff; color: #3b7dd8; font-size: 11px; padding: 3px 8px; border-radius: 8px; margin-top: 5px; cursor: pointer; }
+        .bag-place.empty { background: #f8fafc; color: #b6c0cc; }
+        .bag-qty { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .bag-qty-btn { width: 25px; height: 25px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; font-size: 14px; cursor: pointer; padding: 0; line-height: 1; }
+        .bag-qty-val { font-size: 13px; font-weight: 700; color: #334155; min-width: 26px; text-align: center; }
+        .buy-group { margin-bottom: 18px; }
+        .buy-group-title { font-size: 13px; font-weight: 700; color: #3b7dd8; margin-bottom: 8px; padding-left: 2px; }
         .theme-box { background: #fff; border-radius: 16px; padding: 14px; margin-top: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
         .theme-row { display: flex; gap: 8px; }
         .theme-row .calc-input { flex: 1; min-width: 0; }
@@ -257,7 +277,7 @@
                     <p id="menuCalcDesc">Рассчитай точный размер пособий по законам Казахстана.</p>
                 </div>
 
-                <div class="menu-item" onclick="openScreen('bagScreen')">
+                <div class="menu-item" onclick="openBagScreen()">
                     <div class="icon">👜</div>
                     <h3 id="menuBagTitle">В роддом</h3>
                     <p id="menuBagDesc">Интерактивный список покупок и вещей для мамы и малыша.</p>
@@ -539,31 +559,66 @@
             <header>
                 <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
                 <div class="logo" style="font-size: 18px;" id="bagHeaderTitle">Сумка в роддом</div>
-                <div style="width: 60px;"></div>
+                <button class="lang-switch" onclick="copyBagList()" style="font-size: 15px; padding: 8px 10px;" id="bagCopyBtn" title="Скопировать">📤</button>
             </header>
 
-            <div class="bag-body">
-                <div class="bag-section">
-                    <h4 id="catDocs">1. Документы</h4>
-                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Удостоверение личности" data-kk="Жеке куәлік">Удостоверение личности</span></label>
-                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Обменная карта" data-kk="Алмасу картасы">Обменная карта</span></label>
-                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Договор с роддомом (при наличии)" data-kk="Перзентханамен келісімшарт (бар болса)">Договор с роддомом (при наличии)</span></label>
+            <div class="calc-body">
+                <div class="bag-tabs">
+                    <button class="bag-tab active" id="bagTab0" onclick="switchBag(0)">На роды</button>
+                    <button class="bag-tab" id="bagTab1" onclick="switchBag(1)">После родов</button>
+                    <button class="bag-tab" id="bagTab2" onclick="switchBag(2)">На выписку</button>
+                    <button class="bag-tab" id="bagTab3" onclick="switchBag(3)">Купить</button>
                 </div>
 
-                <div class="bag-section">
-                    <h4 id="catMother">2. Маме</h4>
-                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Халат и ночная рубашка" data-kk="Халат пен түнде киетін көйлек">Халат и ночная рубашка</span></label>
-                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Моющиеся тапочки" data-kk="Жууға болатын тәпішке">Моющиеся тапочки</span></label>
-                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Послеродовые прокладки" data-kk="Босанғаннан кейінгі төсемелер">Послеродовые прокладки</span></label>
-                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Бюстгальтер для кормления" data-kk="Емізуге арналған көкірекше">Бюстгальтер для кормления</span></label>
+                <div class="bag-progress" id="bagProgress">
+                    <div class="bag-progress-top">
+                        <div class="bag-progress-txt" id="bagProgressTxt"></div>
+                        <div class="bag-progress-pct" id="bagProgressPct"></div>
+                    </div>
+                    <div class="bag-bar"><div class="bag-bar-fill" id="bagBarFill"></div></div>
                 </div>
 
-                <div class="bag-section">
-                    <h4 id="catBaby">3. Малышу</h4>
-                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Подгузники (упаковка newborn)" data-kk="Жөргектіктер (newborn қаптамасы)">Подгузники (упаковка newborn)</span></label>
-                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Влажные салфетки (детские)" data-kk="Ылғалды майлықтар (балаларға арналған)">Влажные салфетки (детские)</span></label>
-                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Боди, слипы и шапочки (3 шт)" data-kk="Боди, слиптер және телпектер (3 дана)">Боди, слипы и шапочки (3 шт)</span></label>
-                    <label class="checklist-item"><input type="checkbox"> <span class="item-text" data-ru="Детское одеяло или плед" data-kk="Балалар көрпесі немесе плед">Детское одеяло или плед</span></label>
+                <div id="bagListSection">
+                    <button class="plan-add" id="bagAddBtn" onclick="toggleBagForm()">+ Добавить вещь</button>
+
+                    <div class="plan-form" id="bagForm">
+                        <div class="input-group">
+                            <label id="lblBagTitle">Что берём:</label>
+                            <input type="text" class="calc-input" id="bagTitle" placeholder="Пелёнки">
+                        </div>
+                        <div class="plan-form-row">
+                            <div class="input-group">
+                                <label id="lblBagQty">Сколько штук:</label>
+                                <input type="number" class="calc-input" id="bagQty" min="1" max="99" value="1">
+                            </div>
+                            <div class="input-group">
+                                <label id="lblBagPlace">Где купить:</label>
+                                <input type="text" class="calc-input" id="bagPlace" placeholder="аптека">
+                            </div>
+                        </div>
+                        <div class="theme-chips" id="bagPlaceChips"></div>
+                        <div class="plan-form-row">
+                            <button class="calc-btn" onclick="saveBagItem()" id="btnSaveBag">Сохранить</button>
+                            <button class="plan-btn-ghost" onclick="toggleBagForm()" id="btnCancelBag">Отмена</button>
+                        </div>
+                    </div>
+
+                    <div id="bagList"></div>
+                    <p id="bagEmpty" style="display:none; text-align:center; color:#94a3b8; font-size:14px; padding:22px 10px;">Здесь пока пусто</p>
+
+                    <button class="plan-btn-ghost" style="width:100%; margin-top:12px;" onclick="addBagTemplate()" id="btnBagTemplate">Подставить типовой набор</button>
+
+                    <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin-top:14px;" id="bagNote">
+                        В каждом роддоме свой список — обязательно уточни его у своего и поправь этот под себя. Количество меняй кнопками, лишнее удаляй, своё добавляй.
+                    </p>
+                </div>
+
+                <div id="buySection" style="display:none;">
+                    <div id="buyList"></div>
+                    <p id="buyEmpty" style="display:none; text-align:center; color:#94a3b8; font-size:14px; padding:22px 10px;">Всё собрано 💕</p>
+                    <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin-top:14px;" id="buyNote">
+                        Здесь всё несобранное, сгруппированное по местам. Удобно открыть прямо в магазине.
+                    </p>
                 </div>
             </div>
         </div>
@@ -1142,6 +1197,24 @@
                 babyHead: 'Малыш по неделям', kickHead: 'Дневник шевелений',
                 planTitle: 'Анализы и визиты', planDesc: 'Свой график обследований и приёмов — ничего не забудется.',
                 planHead: 'Анализы и визиты', tabVisits: 'Визиты', tabTests: 'Анализы',
+                bagNames: ['На роды', 'После родов', 'На выписку'], bagBuyTab: 'Купить',
+                bagTitleFull: 'СУМКА В РОДДОМ',
+                bagAdd: '+ Добавить вещь', lblBagTitle: 'Что берём:', lblBagQty: 'Сколько штук:', lblBagPlace: 'Где купить:',
+                bagTemplateBtn: 'Подставить типовой набор',
+                bagPacked: 'Собрано {a} из {b}', pcs: 'шт', addPlace: '+ где купить',
+                askPlace: 'Где это купить или взять?', placeUnknown: 'Место не указано',
+                bagEmptyTxt: 'Здесь пока пусто', allPacked: 'Всё собрано 💕',
+                copied: 'Список скопирован — можно отправить в мессенджер 💕',
+                copyManual: 'Скопируй список вручную:',
+                confirmBagTemplate: 'Добавить типовой набор вещей? В каждом роддоме свой список — потом обязательно сверь его со своим и поправь.',
+                bagNote: 'В каждом роддоме свой список — обязательно уточни его у своего и поправь этот под себя. Количество меняй кнопками, лишнее удаляй, своё добавляй.',
+                buyNote: 'Здесь всё несобранное, сгруппированное по местам. Удобно открыть прямо в магазине.',
+                placeIdeas: ['Kaspi', 'Детский мир', 'рынок', 'аптека', 'уже есть дома'],
+                bagTemplate: [
+                    [{t:'Удостоверение личности',q:1},{t:'Обменная карта',q:1},{t:'Договор с роддомом (если есть)',q:1},{t:'Моющиеся тапочки',q:1},{t:'Ночная рубашка',q:1},{t:'Вода без газа 0,5 л',q:2},{t:'Телефон и зарядка',q:1},{t:'Резинка для волос',q:2}],
+                    [{t:'Послеродовые прокладки',q:2},{t:'Одноразовые трусы',q:5},{t:'Бюстгальтер для кормления',q:2},{t:'Прокладки для груди',q:1},{t:'Халат',q:1},{t:'Полотенце',q:2},{t:'Зубная щётка и паста',q:1},{t:'Мыло и шампунь',q:1},{t:'Крем от трещин на сосках',q:1},{t:'Подгузники размера newborn',q:1},{t:'Влажные салфетки',q:2},{t:'Боди',q:3},{t:'Слипы',q:3},{t:'Шапочки',q:2},{t:'Носочки',q:2},{t:'Пелёнки',q:5},{t:'Крем под подгузник',q:1}],
+                    [{t:'Комплект на выписку малышу',q:1},{t:'Одежда маме на выписку',q:1},{t:'Автокресло',q:1},{t:'Детское одеяло или конверт',q:1}]
+                ],
                 addVisit: '+ Добавить визит', addTest: '+ Добавить анализ',
                 lblVisitTitle: 'К кому или зачем:', lblVisitDate: 'Дата:', lblVisitTime: 'Время:', lblVisitPlace: 'Где (необязательно):',
                 lblTestTitle: 'Что за обследование:', lblTestFrom: 'С недели:', lblTestTo: 'По неделю:',
@@ -1238,6 +1311,24 @@
                 babyHead: 'Нәресте апта сайын', kickHead: 'Қимыл күнделігі',
                 planTitle: 'Талдаулар мен қабылдаулар', planDesc: 'Өз тексерулерің мен дәрігерге баруларың — ештеңе ұмытылмайды.',
                 planHead: 'Талдаулар мен қабылдаулар', tabVisits: 'Қабылдаулар', tabTests: 'Талдаулар',
+                bagNames: ['Босануға', 'Босанғаннан кейін', 'Шығарылымға'], bagBuyTab: 'Сатып алу',
+                bagTitleFull: 'ПЕРЗЕНТХАНАҒА СӨМКЕ',
+                bagAdd: '+ Зат қосу', lblBagTitle: 'Не аламыз:', lblBagQty: 'Нешеу:', lblBagPlace: 'Қайдан алу:',
+                bagTemplateBtn: 'Үлгі жинақты қосу',
+                bagPacked: '{b} заттың {a}-і жиналды', pcs: 'дана', addPlace: '+ қайдан алу',
+                askPlace: 'Мұны қайдан алуға болады?', placeUnknown: 'Орны көрсетілмеген',
+                bagEmptyTxt: 'Әзірге бос', allPacked: 'Бәрі жиналды 💕',
+                copied: 'Тізім көшірілді — мессенджерге жіберуге болады 💕',
+                copyManual: 'Тізімді қолмен көшір:',
+                confirmBagTemplate: 'Заттардың үлгі жинағы қосылсын ба? Әр перзентхананың өз тізімі бар — кейін өзіңдікімен салыстырып, түзет.',
+                bagNote: 'Әр перзентхананың өз тізімі бар — өзіңдікінен нақтылап, мынаны өзіңе қарай түзет. Санын түймелермен өзгерт, артығын өшір, өзіңдікін қос.',
+                buyNote: 'Мұнда жиналмағанның бәрі орны бойынша топталған. Дүкенде ашуға ыңғайлы.',
+                placeIdeas: ['Kaspi', 'Балалар дүкені', 'базар', 'дәріхана', 'үйде бар'],
+                bagTemplate: [
+                    [{t:'Жеке куәлік',q:1},{t:'Алмасу картасы',q:1},{t:'Перзентханамен келісімшарт (бар болса)',q:1},{t:'Жууға болатын тәпішке',q:1},{t:'Түнде киетін көйлек',q:1},{t:'Газсыз су 0,5 л',q:2},{t:'Телефон мен зарядтағыш',q:1},{t:'Шаш резеңкесі',q:2}],
+                    [{t:'Босанғаннан кейінгі төсемелер',q:2},{t:'Бір реттік іш киім',q:5},{t:'Емізуге арналған көкірекше',q:2},{t:'Кеудеге арналған төсемелер',q:1},{t:'Халат',q:1},{t:'Сүлгі',q:2},{t:'Тіс щёткасы мен пастасы',q:1},{t:'Сабын мен сусабын',q:1},{t:'Емшек жарығына арналған крем',q:1},{t:'Newborn өлшемді жөргектіктер',q:1},{t:'Ылғалды майлықтар',q:2},{t:'Боди',q:3},{t:'Слип',q:3},{t:'Телпек',q:2},{t:'Шұлық',q:2},{t:'Жөргек',q:5},{t:'Жөргектік астына крем',q:1}],
+                    [{t:'Нәрестеге шығарылым жинағы',q:1},{t:'Анаға шығарылымға киім',q:1},{t:'Автокресло',q:1},{t:'Балалар көрпесі немесе конверт',q:1}]
+                ],
                 addVisit: '+ Қабылдау қосу', addTest: '+ Талдау қосу',
                 lblVisitTitle: 'Кімге немесе не үшін:', lblVisitDate: 'Күні:', lblVisitTime: 'Уақыты:', lblVisitPlace: 'Қайда (міндетті емес):',
                 lblTestTitle: 'Қандай тексеру:', lblTestFrom: 'Қай аптадан:', lblTestTo: 'Қай аптаға дейін:',
@@ -1343,9 +1434,6 @@
             document.getElementById('resRow2').innerText = data[currentLang].r2;
             document.getElementById('calcDisclaimer').innerText = data[currentLang].disc;
             document.getElementById('bagHeaderTitle').innerText = data[currentLang].bagHead;
-            document.getElementById('catDocs').innerText = data[currentLang].cDocs;
-            document.getElementById('catMother').innerText = data[currentLang].cMother;
-            document.getElementById('catBaby').innerText = data[currentLang].cBaby;
             
             // Перевод элементов карты
             document.getElementById('mapHeaderTitle').innerText = data[currentLang].mapHead;
@@ -1374,6 +1462,18 @@
             document.getElementById('menuPlanDesc').innerText = data[currentLang].planDesc;
             document.getElementById('planHeaderTitle').innerText = data[currentLang].planHead;
             document.getElementById('tabVisits').innerText = data[currentLang].tabVisits;
+            for (let i = 0; i < 3; i++) document.getElementById('bagTab' + i).innerText = data[currentLang].bagNames[i];
+            document.getElementById('bagTab3').innerText = data[currentLang].bagBuyTab;
+            document.getElementById('bagAddBtn').innerText = data[currentLang].bagAdd;
+            document.getElementById('lblBagTitle').innerText = data[currentLang].lblBagTitle;
+            document.getElementById('lblBagQty').innerText = data[currentLang].lblBagQty;
+            document.getElementById('lblBagPlace').innerText = data[currentLang].lblBagPlace;
+            document.getElementById('btnSaveBag').innerText = data[currentLang].btnSave;
+            document.getElementById('btnCancelBag').innerText = data[currentLang].btnCancel;
+            document.getElementById('btnBagTemplate').innerText = data[currentLang].bagTemplateBtn;
+            document.getElementById('bagNote').innerText = data[currentLang].bagNote;
+            document.getElementById('buyNote').innerText = data[currentLang].buyNote;
+            if (document.getElementById('bagScreen').classList.contains('active')) { renderPlaceChips(); switchBag(currentBag); }
             document.getElementById('tabTests').innerText = data[currentLang].tabTests;
             document.getElementById('btnAddVisit').innerText = data[currentLang].addVisit;
             document.getElementById('btnAddTest').innerText = data[currentLang].addTest;
@@ -1422,10 +1522,6 @@
             if (chatHistory.length === 0) {
                  document.getElementById('aiGreeting').innerText = data[currentLang].greeting;
             }
-
-            document.querySelectorAll('.item-text').forEach(el => {
-                el.innerText = el.getAttribute('data-' + currentLang);
-            });
 
             renderLocalClinics();
         }
@@ -2304,6 +2400,269 @@
                 card.appendChild(del);
                 box.appendChild(card);
             });
+        }
+
+        // ==========================================
+        // СУМКА В РОДДОМ (три сумки + список покупок)
+        // ==========================================
+        const BAG_KEY = 'ayala_bag';
+        let currentBag = 0;   // 0 роды, 1 после родов, 2 выписка, 3 «купить»
+
+        function loadBags() {
+            try {
+                const v = JSON.parse(localStorage.getItem(BAG_KEY));
+                if (v && Array.isArray(v.bags) && v.bags.length === 3) return v.bags;
+            } catch (e) { console.error('Список сумки повреждён:', e); }
+            return [[], [], []];
+        }
+        function storeBags(bags) {
+            try { localStorage.setItem(BAG_KEY, JSON.stringify({ bags })); }
+            catch (e) { console.error('Не удалось сохранить сумку:', e); }
+        }
+
+        function switchBag(idx) {
+            currentBag = idx;
+            for (let i = 0; i < 4; i++) {
+                document.getElementById('bagTab' + i).classList.toggle('active', i === idx);
+            }
+            const isBuy = idx === 3;
+            document.getElementById('bagListSection').style.display = isBuy ? 'none' : 'block';
+            document.getElementById('buySection').style.display = isBuy ? 'block' : 'none';
+            document.getElementById('bagProgress').style.display = isBuy ? 'none' : 'block';
+            if (isBuy) renderBuyList(); else renderBag();
+        }
+
+        function toggleBagForm() {
+            const f = document.getElementById('bagForm');
+            const open = f.style.display !== 'flex';
+            f.style.display = open ? 'flex' : 'none';
+            if (!open) return;
+            document.getElementById('bagTitle').value = '';
+            document.getElementById('bagQty').value = 1;
+            document.getElementById('bagPlace').value = '';
+            renderPlaceChips();
+        }
+
+        function renderPlaceChips() {
+            const box = document.getElementById('bagPlaceChips');
+            box.innerHTML = '';
+            data[currentLang].placeIdeas.forEach(p => {
+                const chip = document.createElement('button');
+                chip.className = 'theme-chip';
+                chip.innerText = p;
+                chip.onclick = () => { document.getElementById('bagPlace').value = p; };
+                box.appendChild(chip);
+            });
+        }
+
+        function saveBagItem() {
+            const title = document.getElementById('bagTitle').value.trim();
+            if (!title) { alert(data[currentLang].needTitle); return; }
+            const qty = Math.max(1, Math.min(99, parseInt(document.getElementById('bagQty').value, 10) || 1));
+            const place = document.getElementById('bagPlace').value.trim();
+
+            const bags = loadBags();
+            bags[currentBag].push({ id: newId(), title, qty, place, packed: false });
+            storeBags(bags);
+
+            toggleBagForm();
+            renderBag();
+        }
+
+        function changeBagQty(id, delta) {
+            const bags = loadBags();
+            const item = bags[currentBag].find(x => x.id === id);
+            if (!item) return;
+            item.qty = Math.max(1, Math.min(99, item.qty + delta));
+            storeBags(bags);
+            renderBag();
+        }
+
+        function toggleBagPacked(id) {
+            const bags = loadBags();
+            const item = bags[currentBag].find(x => x.id === id);
+            if (!item) return;
+            item.packed = !item.packed;
+            storeBags(bags);
+            renderBag();
+        }
+
+        function editBagPlace(id) {
+            const bags = loadBags();
+            const item = bags[currentBag].find(x => x.id === id);
+            if (!item) return;
+            const val = prompt(data[currentLang].askPlace, item.place || '');
+            if (val === null) return;
+            item.place = val.trim();
+            storeBags(bags);
+            renderBag();
+        }
+
+        function deleteBagItem(id) {
+            if (!confirm(data[currentLang].confirmDeleteItem)) return;
+            const bags = loadBags();
+            bags[currentBag] = bags[currentBag].filter(x => x.id !== id);
+            storeBags(bags);
+            renderBag();
+        }
+
+        function renderBag() {
+            const box = document.getElementById('bagList');
+            const empty = document.getElementById('bagEmpty');
+            const t = data[currentLang];
+            const items = loadBags()[currentBag] || [];
+
+            const packed = items.filter(i => i.packed).length;
+            const total = items.length;
+            document.getElementById('bagProgressTxt').innerText =
+                t.bagPacked.replace('{a}', packed).replace('{b}', total);
+            document.getElementById('bagProgressPct').innerText = total ? Math.round(packed / total * 100) + '%' : '0%';
+            document.getElementById('bagBarFill').style.width = (total ? packed / total * 100 : 0) + '%';
+
+            box.innerHTML = '';
+            if (total === 0) { empty.style.display = 'block'; empty.innerText = t.bagEmptyTxt; return; }
+            empty.style.display = 'none';
+
+            items.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'bag-item';
+
+                const check = document.createElement('button');
+                check.className = 'item-check' + (item.packed ? ' done' : '');
+                check.innerText = item.packed ? '✓' : '';
+                check.onclick = () => toggleBagPacked(item.id);
+
+                const main = document.createElement('div');
+                main.className = 'bag-item-main';
+
+                const title = document.createElement('div');
+                title.className = 'bag-item-title' + (item.packed ? ' packed' : '');
+                title.innerText = item.title;
+                main.appendChild(title);
+
+                const place = document.createElement('span');
+                place.className = 'bag-place' + (item.place ? '' : ' empty');
+                place.innerText = item.place || t.addPlace;
+                place.onclick = () => editBagPlace(item.id);
+                main.appendChild(place);
+
+                const qty = document.createElement('div');
+                qty.className = 'bag-qty';
+                const minus = document.createElement('button');
+                minus.className = 'bag-qty-btn'; minus.innerText = '−';
+                minus.onclick = () => changeBagQty(item.id, -1);
+                const val = document.createElement('span');
+                val.className = 'bag-qty-val'; val.innerText = item.qty + ' ' + t.pcs;
+                const plus = document.createElement('button');
+                plus.className = 'bag-qty-btn'; plus.innerText = '+';
+                plus.onclick = () => changeBagQty(item.id, 1);
+                qty.appendChild(minus); qty.appendChild(val); qty.appendChild(plus);
+
+                const del = document.createElement('button');
+                del.className = 'item-del'; del.innerText = '✕';
+                del.onclick = () => deleteBagItem(item.id);
+
+                row.appendChild(check);
+                row.appendChild(main);
+                row.appendChild(qty);
+                row.appendChild(del);
+                box.appendChild(row);
+            });
+        }
+
+        // Всё несобранное, сгруппированное по местам покупки
+        function renderBuyList() {
+            const box = document.getElementById('buyList');
+            const empty = document.getElementById('buyEmpty');
+            const t = data[currentLang];
+            const bags = loadBags();
+
+            const groups = {};
+            bags.forEach(list => list.forEach(item => {
+                if (item.packed) return;
+                const key = item.place || t.placeUnknown;
+                (groups[key] = groups[key] || []).push(item);
+            }));
+
+            box.innerHTML = '';
+            const keys = Object.keys(groups);
+            if (keys.length === 0) { empty.style.display = 'block'; empty.innerText = t.allPacked; return; }
+            empty.style.display = 'none';
+
+            keys.sort((a, b) => a === t.placeUnknown ? 1 : b === t.placeUnknown ? -1 : a.localeCompare(b));
+
+            keys.forEach(key => {
+                const group = document.createElement('div');
+                group.className = 'buy-group';
+                const title = document.createElement('div');
+                title.className = 'buy-group-title';
+                title.innerText = key + ' • ' + groups[key].length;
+                group.appendChild(title);
+
+                groups[key].forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'bag-item';
+                    const main = document.createElement('div');
+                    main.className = 'bag-item-main';
+                    const tt = document.createElement('div');
+                    tt.className = 'bag-item-title';
+                    tt.innerText = item.title;
+                    main.appendChild(tt);
+                    const q = document.createElement('div');
+                    q.className = 'bag-qty-val';
+                    q.innerText = item.qty + ' ' + t.pcs;
+                    row.appendChild(main);
+                    row.appendChild(q);
+                    group.appendChild(row);
+                });
+                box.appendChild(group);
+            });
+        }
+
+        function addBagTemplate() {
+            if (!confirm(data[currentLang].confirmBagTemplate)) return;
+            const tpl = data[currentLang].bagTemplate;
+            const bags = loadBags();
+            tpl.forEach((list, i) => {
+                list.forEach(it => {
+                    const exists = bags[i].some(x => x.title.toLowerCase() === it.t.toLowerCase());
+                    if (!exists) bags[i].push({ id: newId(), title: it.t, qty: it.q, place: '', packed: false });
+                });
+            });
+            storeBags(bags);
+            renderBag();
+        }
+
+        // Текстовый список — отправить мужу или маме
+        function copyBagList() {
+            const t = data[currentLang];
+            const bags = loadBags();
+            const names = t.bagNames;
+            let out = t.bagTitleFull + '\n';
+
+            bags.forEach((list, i) => {
+                if (!list.length) return;
+                out += '\n' + names[i].toUpperCase() + '\n';
+                list.forEach(item => {
+                    out += (item.packed ? '[x] ' : '[ ] ') + item.title + ' — ' + item.qty + ' ' + t.pcs +
+                           (item.place ? ' (' + item.place + ')' : '') + '\n';
+                });
+            });
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(out).then(
+                    () => alert(t.copied),
+                    () => prompt(t.copyManual, out)
+                );
+            } else {
+                prompt(t.copyManual, out);
+            }
+        }
+
+        function openBagScreen() {
+            renderPlaceChips();
+            switchBag(0);
+            openScreen('bagScreen');
         }
 
         function openPlanScreen() {
