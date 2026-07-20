@@ -111,6 +111,22 @@
 
         /* КАЛЬКУЛЯТОР */
         .calc-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
+        .ob-overlay { position: fixed; inset: 0; background: linear-gradient(160deg, #fff5f7, #ffeef2); z-index: 9999; display: none; flex-direction: column; overflow-y: auto; }
+        .ob-inner { max-width: 460px; width: 100%; margin: 0 auto; padding: 30px 22px 40px 22px; }
+        .ob-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 26px; }
+        .ob-dot { width: 7px; height: 7px; border-radius: 50%; background: #ffd0dc; }
+        .ob-dot.on { background: #ff8fa3; width: 20px; border-radius: 4px; }
+        .ob-step { display: none; }
+        .ob-step.on { display: block; }
+        .ob-title { font-size: 23px; font-weight: 800; color: #334155; line-height: 1.25; margin-bottom: 8px; }
+        .ob-sub { font-size: 14px; color: #64748b; line-height: 1.5; margin-bottom: 20px; }
+        .ob-nav { display: flex; gap: 10px; margin-top: 24px; }
+        .ob-next { flex: 1; padding: 15px; border-radius: 15px; border: none; background: #ff8fa3; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+        .ob-skip { padding: 15px 18px; border-radius: 15px; border: none; background: transparent; color: #94a3b8; font-size: 14px; cursor: pointer; }
+        .ob-note { font-size: 12px; color: #94a3b8; text-align: center; margin-top: 18px; line-height: 1.5; }
+        .ob-gender { display: flex; gap: 8px; }
+        .ob-gender button { flex: 1; padding: 13px 8px; border-radius: 14px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .ob-gender button.on { background: #ff8fa3; border-color: #ff8fa3; color: #fff; }
         .place-card { background: #fff; border-radius: 18px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
         .place-cap { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
         .place-name { font-size: 16px; font-weight: 700; color: #334155; line-height: 1.3; }
@@ -256,6 +272,119 @@
 
     <div class="phone-container">
         
+        <div class="ob-overlay" id="obOverlay">
+            <div class="ob-inner">
+                <div class="ob-dots">
+                    <div class="ob-dot on" id="obDot0"></div>
+                    <div class="ob-dot" id="obDot1"></div>
+                    <div class="ob-dot" id="obDot2"></div>
+                    <div class="ob-dot" id="obDot3"></div>
+                </div>
+
+                <div class="ob-step on" id="obStep0">
+                    <div class="ob-title" id="obT0">Привет! Я Аяла 💕</div>
+                    <div class="ob-sub" id="obS0">Буду рядом всю беременность. Давай познакомимся — это займёт минуту.</div>
+                    <div class="input-group">
+                        <label id="obLblMom">Как к тебе обращаться?</label>
+                        <input type="text" class="calc-input" id="obMomName" placeholder="Айгерим">
+                    </div>
+                </div>
+
+                <div class="ob-step" id="obStep1">
+                    <div class="ob-title" id="obT1">Расскажи о малыше</div>
+                    <div class="ob-sub" id="obS1">Если пол уже знаешь — выбери. Если придумали имя, тоже напиши: буду называть малыша по имени.</div>
+                    <div class="input-group">
+                        <label id="obLblGender">Пол малыша:</label>
+                        <div class="ob-gender">
+                            <button id="obG0" onclick="obSetGender('')">Пока не знаю</button>
+                            <button id="obG1" onclick="obSetGender('girl')">Девочка</button>
+                            <button id="obG2" onclick="obSetGender('boy')">Мальчик</button>
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin-top:14px;">
+                        <label id="obLblBaby">Имя малыша (если уже выбрали):</label>
+                        <input type="text" class="calc-input" id="obBabyName" placeholder="можно пропустить">
+                    </div>
+                </div>
+
+                <div class="ob-step" id="obStep2">
+                    <div class="ob-title" id="obT2">Какой у тебя срок?</div>
+                    <div class="ob-sub" id="obS2">Выбери то, что знаешь точнее — остальное посчитаю сама.</div>
+                    <div class="input-group">
+                        <label id="obLblMode">Как считаем:</label>
+                        <select class="calc-input" id="obMode" onchange="obModeChange()">
+                            <option value="lmp" id="obM0">По первому дню последних месячных</option>
+                            <option value="manual" id="obM1">Указать неделю вручную</option>
+                            <option value="due" id="obM2">По дате родов (ПДР)</option>
+                            <option value="conception" id="obM3">По дате зачатия или переноса (ЭКО)</option>
+                        </select>
+                    </div>
+                    <div id="obLmp" style="margin-top:14px;">
+                        <div class="input-group">
+                            <label id="obLblLmp">Первый день последних месячных:</label>
+                            <input type="date" class="calc-input" id="obLmpDate">
+                        </div>
+                        <div class="input-group" style="margin-top:10px;">
+                            <label id="obLblCycle">Длина цикла, дней:</label>
+                            <input type="number" class="calc-input" id="obCycle" min="20" max="45" value="28">
+                        </div>
+                    </div>
+                    <div id="obManual" style="display:none; margin-top:14px;">
+                        <div class="plan-form-row">
+                            <div class="input-group">
+                                <label id="obLblWeek">Полных недель:</label>
+                                <input type="number" class="calc-input" id="obWeek" min="1" max="42" placeholder="20">
+                            </div>
+                            <div class="input-group">
+                                <label id="obLblDays">И дней:</label>
+                                <input type="number" class="calc-input" id="obDays" min="0" max="6" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="input-group" style="margin-top:10px;">
+                            <label id="obLblOn">На какую дату это сказали:</label>
+                            <input type="date" class="calc-input" id="obOnDate">
+                        </div>
+                    </div>
+                    <div id="obDue" style="display:none; margin-top:14px;">
+                        <div class="input-group">
+                            <label id="obLblDue">Предполагаемая дата родов:</label>
+                            <input type="date" class="calc-input" id="obDueDate">
+                        </div>
+                    </div>
+                    <div id="obConc" style="display:none; margin-top:14px;">
+                        <div class="input-group">
+                            <label id="obLblConc">Дата зачатия или переноса:</label>
+                            <input type="date" class="calc-input" id="obConcDate">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ob-step" id="obStep3">
+                    <div class="ob-title" id="obT3">Твой роддом</div>
+                    <div class="ob-sub" id="obS3">Если уже выбрала — запиши. Тогда в нужный момент телефон и маршрут будут в одно касание. Ещё не решила — просто пропусти.</div>
+                    <div class="input-group">
+                        <label id="obLblRodName">Название:</label>
+                        <input type="text" class="calc-input" id="obRodName" placeholder="можно пропустить">
+                    </div>
+                    <div class="input-group" style="margin-top:12px;">
+                        <label id="obLblRodAddr">Адрес:</label>
+                        <input type="text" class="calc-input" id="obRodAddr" placeholder="">
+                    </div>
+                    <div class="input-group" style="margin-top:12px;">
+                        <label id="obLblRodPhone">Телефон:</label>
+                        <input type="tel" class="calc-input" id="obRodPhone" placeholder="">
+                    </div>
+                </div>
+
+                <div class="ob-nav">
+                    <button class="ob-skip" onclick="obNext(true)" id="obSkipBtn">Пропустить</button>
+                    <button class="ob-next" onclick="obNext(false)" id="obNextBtn">Далее</button>
+                </div>
+
+                <div class="ob-note" id="obNote">Всё это потом можно поменять в настройках ⚙️</div>
+            </div>
+        </div>
+
         <div id="mainScreen" class="screen active">
             <header>
                 <div class="logo">ayala</div>
@@ -708,6 +837,18 @@
                 </p>
 
                 <div class="input-group">
+                    <label id="labelMomName">Как к тебе обращаться:</label>
+                    <input type="text" class="calc-input" id="mom-name-input" onchange="saveNames()" placeholder="Айгерим">
+                </div>
+
+                <div class="input-group" style="margin-top: 14px;">
+                    <label id="labelBabyName">Имя малыша:</label>
+                    <input type="text" class="calc-input" id="baby-name-input" onchange="saveNames()" placeholder="если уже выбрали">
+                </div>
+
+                <button class="plan-btn-ghost" style="width:100%; margin-top:16px;" onclick="startOnboarding()" id="btnRerun">Пройти знакомство заново</button>
+
+                <div class="input-group" style="margin-top: 20px;">
                     <label id="labelGender">Пол малыша:</label>
                     <select class="calc-input" id="gender-select" onchange="saveGender()">
                         <option value="" id="optUnknown">Пока не знаю</option>
@@ -1101,6 +1242,12 @@ ${lines.join('\n')}
                 }
             } catch (e) { console.error('Не удалось прочитать места для промпта:', e); }
 
+            const mom = getMomName();
+            const babyName = getBabyName();
+            let namesLine = '';
+            if (mom) namesLine += `\nЕё зовут ${mom} — обращайся к ней по имени, но не в каждом предложении.`;
+            if (babyName) namesLine += `\nМалыша уже назвали: ${babyName}. Называй малыша по имени — ей это очень приятно.`;
+
             const g = getGender();
             let genderLine = '';
             if (g === 'girl') genderLine = '\nПол малыша известен: ДЕВОЧКА. Говори о ней в женском роде («твоя дочка», «она»).';
@@ -1110,7 +1257,7 @@ ${lines.join('\n')}
 
 ## СРОК СОБЕСЕДНИЦЫ ((данные из приложения, им можно доверять))
 Сейчас у неё ${p.week} полных недель и ${p.days} дней беременности — то есть идёт ${p.week + 1}-я неделя, ${p.trimester} триместр. До предполагаемой даты родов около ${p.daysLeft} дней.
-Учитывай этот срок в каждом ответе и НЕ спрашивай его заново — ты его уже знаешь. Рассказывай о том, что происходит с малышом и с её телом именно сейчас, и что уместно делать на этом сроке.${genderLine}${placesLine}
+Учитывай этот срок в каждом ответе и НЕ спрашивай его заново — ты его уже знаешь. Рассказывай о том, что происходит с малышом и с её телом именно сейчас, и что уместно делать на этом сроке.${namesLine}${genderLine}${placesLine}
 
 ## СПРАВОЧНИК РАЗМЕРОВ МАЛЫША ((сверяйся с ним, не выдумывай цифры))
 12 недель — около 6 см, 15 г. 16 недель — около 12 см, 100 г. 20 недель — около 25 см, 300 г.
@@ -1246,6 +1393,13 @@ ${lines.join('\n')}
 
         function getGender() { return localStorage.getItem(GENDER_KEY) || ''; }
 
+        function saveNames() {
+            const mom = document.getElementById('mom-name-input').value.trim();
+            const baby = document.getElementById('baby-name-input').value.trim();
+            if (mom) localStorage.setItem(MOM_NAME_KEY, mom); else localStorage.removeItem(MOM_NAME_KEY);
+            if (baby) localStorage.setItem(BABY_NAME_KEY, baby); else localStorage.removeItem(BABY_NAME_KEY);
+        }
+
         function saveGender() {
             const v = document.getElementById('gender-select').value;
             if (v) localStorage.setItem(GENDER_KEY, v);
@@ -1378,6 +1532,19 @@ ${lines.join('\n')}
                 noChats: 'Пока нет сохранённых чатов', msgWord: 'сообщ.',
                 confirmDelete: 'Удалить этот чат? Восстановить не получится.',
                 labelGender: 'Пол малыша:',
+                labelMomName: 'Как к тебе обращаться:', labelBabyName: 'Имя малыша:',
+                btnRerun: 'Пройти знакомство заново',
+                obNext: 'Далее', obFinish: 'Готово 💕', obSkip: 'Пропустить',
+                obT0: 'Привет! Я Аяла 💕', obS0: 'Буду рядом всю беременность. Давай познакомимся — это займёт минуту.',
+                obLblMom: 'Как к тебе обращаться?',
+                obT1: 'Расскажи о малыше', obS1: 'Если пол уже знаешь — выбери. Если придумали имя, тоже напиши: буду называть малыша по имени.',
+                obLblGender: 'Пол малыша:', obLblBaby: 'Имя малыша (если уже выбрали):',
+                obG0: 'Пока не знаю', obG1: 'Девочка', obG2: 'Мальчик',
+                obT2: 'Какой у тебя срок?', obS2: 'Выбери то, что знаешь точнее — остальное посчитаю сама.',
+                obLblMode: 'Как считаем:',
+                obT3: 'Твой роддом', obS3: 'Если уже выбрала — запиши. Тогда в нужный момент телефон и маршрут будут в одно касание. Ещё не решила — просто пропусти.',
+                obLblRodName: 'Название:', obLblRodAddr: 'Адрес:', obLblRodPhone: 'Телефон:',
+                obNote: 'Всё это потом можно поменять в настройках ⚙️',
                 labelModel: 'Модель ИИ:',
                 onlyImages: 'Пока можно прикреплять только изображения. Документ удобнее сфотографировать.',
                 imageTooBig: 'Фото слишком большое. Попробуй снимок поменьше.',
@@ -1534,6 +1701,19 @@ ${lines.join('\n')}
                 noChats: 'Әзірге сақталған чат жоқ', msgWord: 'хабарлама',
                 confirmDelete: 'Бұл чат өшірілсін бе? Қалпына келтіру мүмкін емес.',
                 labelGender: 'Нәрестенің жынысы:',
+                labelMomName: 'Сені қалай атайын:', labelBabyName: 'Нәрестенің аты:',
+                btnRerun: 'Танысуды қайта өту',
+                obNext: 'Әрі қарай', obFinish: 'Дайын 💕', obSkip: 'Өткізу',
+                obT0: 'Сәлем! Мен — Аяламын 💕', obS0: 'Бүкіл жүктілік бойы жаныңда боламын. Танысайық — бір минут алады.',
+                obLblMom: 'Сені қалай атайын?',
+                obT1: 'Нәресте туралы айтшы', obS1: 'Жынысын білсең — таңда. Атын қойған болсаңдар, оны да жаз: нәрестені атымен атаймын.',
+                obLblGender: 'Нәрестенің жынысы:', obLblBaby: 'Нәрестенің аты (қойған болсаңдар):',
+                obG0: 'Әзірге білмеймін', obG1: 'Қыз', obG2: 'Ұл',
+                obT2: 'Мерзімің қандай?', obS2: 'Нақты білетініңді таңда — қалғанын өзім санаймын.',
+                obLblMode: 'Қалай санаймыз:',
+                obT3: 'Сенің перзентханаң', obS3: 'Таңдаған болсаң — жазып қой. Сонда керек кезде телефон мен бағыт бір рет басқанда табылады. Әлі шешпесең — өткізіп жібер.',
+                obLblRodName: 'Атауы:', obLblRodAddr: 'Мекенжайы:', obLblRodPhone: 'Телефон:',
+                obNote: 'Мұның бәрін кейін баптаулардан ⚙️ өзгертуге болады',
                 labelModel: 'ЖИ моделі:',
                 onlyImages: 'Әзірге тек сурет тіркеуге болады. Құжатты суретке түсірген ыңғайлы.',
                 imageTooBig: 'Сурет тым үлкен. Кішірек суретті байқап көр.',
@@ -1717,6 +1897,16 @@ ${lines.join('\n')}
             updateKickView();
             if (document.getElementById('kickScreen').classList.contains('active')) renderKickHistory();
             document.getElementById('labelGender').innerText = data[currentLang].labelGender;
+            document.getElementById('labelMomName').innerText = data[currentLang].labelMomName;
+            document.getElementById('labelBabyName').innerText = data[currentLang].labelBabyName;
+            document.getElementById('btnRerun').innerText = data[currentLang].btnRerun;
+            ['obT0','obS0','obLblMom','obT1','obS1','obLblGender','obLblBaby','obG0','obG1','obG2',
+             'obT2','obS2','obLblMode','obT3','obS3','obLblRodName','obLblRodAddr','obLblRodPhone','obNote'].forEach(k => {
+                const el = document.getElementById(k);
+                if (el && data[currentLang][k]) el.innerText = data[currentLang][k];
+            });
+            document.getElementById('obSkipBtn').innerText = data[currentLang].obSkip;
+            document.getElementById('obNextBtn').innerText = obStep === 3 ? data[currentLang].obFinish : data[currentLang].obNext;
             document.getElementById('labelModel').innerText = data[currentLang].labelModel;
             document.getElementById('modelHelp').innerText = data[currentLang].modelHelp;
             document.getElementById('optUnknown').innerText = data[currentLang].optUnknown;
@@ -3269,6 +3459,146 @@ ${lines.join('\n')}
             openScreen('mapScreen');
         }
 
+        // ==========================================
+        // ЗНАКОМСТВО ПРИ ПЕРВОМ ОТКРЫТИИ
+        // ==========================================
+        const ONBOARDED_KEY = 'ayala_onboarded';
+        const MOM_NAME_KEY = 'ayala_mom_name';
+        const BABY_NAME_KEY = 'ayala_baby_name';
+
+        let obStep = 0;
+        let obGender = '';
+
+        function getMomName() { return localStorage.getItem(MOM_NAME_KEY) || ''; }
+        function getBabyName() { return localStorage.getItem(BABY_NAME_KEY) || ''; }
+
+        function obSetGender(g) {
+            obGender = g;
+            ['', 'girl', 'boy'].forEach((val, i) => {
+                document.getElementById('obG' + i).classList.toggle('on', val === g);
+            });
+        }
+
+        function obModeChange() {
+            const m = document.getElementById('obMode').value;
+            document.getElementById('obLmp').style.display = m === 'lmp' ? 'block' : 'none';
+            document.getElementById('obManual').style.display = m === 'manual' ? 'block' : 'none';
+            document.getElementById('obDue').style.display = m === 'due' ? 'block' : 'none';
+            document.getElementById('obConc').style.display = m === 'conception' ? 'block' : 'none';
+        }
+
+        function obShow(step) {
+            obStep = step;
+            for (let i = 0; i < 4; i++) {
+                document.getElementById('obStep' + i).classList.toggle('on', i === step);
+                document.getElementById('obDot' + i).classList.toggle('on', i === step);
+            }
+            const t = data[currentLang];
+            document.getElementById('obNextBtn').innerText = step === 3 ? t.obFinish : t.obNext;
+            document.getElementById('obSkipBtn').style.visibility = step === 0 ? 'hidden' : 'visible';
+            window.scrollTo(0, 0);
+        }
+
+        // Считаем опорную дату из полей знакомства
+        function obAnchor() {
+            const m = document.getElementById('obMode').value;
+            if (m === 'lmp') {
+                const d = document.getElementById('obLmpDate').value;
+                if (!d) return null;
+                const c = parseInt(document.getElementById('obCycle').value, 10);
+                const shift = (!isNaN(c) && c >= 20 && c <= 45) ? c - 28 : 0;
+                return { anchor: addDays(d, shift), raw: { key: LMP_KEY, val: d, cycle: String(c || 28) } };
+            }
+            if (m === 'due') {
+                const d = document.getElementById('obDueDate').value;
+                return d ? { anchor: addDays(d, -280), raw: { key: DUE_DATE_KEY, val: d } } : null;
+            }
+            if (m === 'conception') {
+                const d = document.getElementById('obConcDate').value;
+                return d ? { anchor: addDays(d, -14), raw: { key: CONC_KEY, val: d } } : null;
+            }
+            const w = parseInt(document.getElementById('obWeek').value, 10);
+            if (isNaN(w)) return null;
+            const dd = parseInt(document.getElementById('obDays').value, 10) || 0;
+            const on = document.getElementById('obOnDate').value || new Date().toISOString().slice(0, 10);
+            return { anchor: addDays(on, -(w * 7 + dd)), manual: { week: w, days: dd, date: on } };
+        }
+
+        function obSaveAll() {
+            const mom = document.getElementById('obMomName').value.trim();
+            if (mom) localStorage.setItem(MOM_NAME_KEY, mom);
+
+            const baby = document.getElementById('obBabyName').value.trim();
+            if (baby) localStorage.setItem(BABY_NAME_KEY, baby);
+
+            if (obGender) localStorage.setItem(GENDER_KEY, obGender);
+
+            const mode = document.getElementById('obMode').value;
+            const res = obAnchor();
+            if (res && res.anchor) {
+                localStorage.setItem(TERM_MODE_KEY, mode);
+                localStorage.setItem(ANCHOR_KEY, res.anchor);
+                if (res.raw) {
+                    localStorage.setItem(res.raw.key, res.raw.val);
+                    if (res.raw.cycle) localStorage.setItem(CYCLE_KEY, res.raw.cycle);
+                }
+                if (res.manual) localStorage.setItem(MANUAL_KEY, JSON.stringify(res.manual));
+            }
+
+            const rodName = document.getElementById('obRodName').value.trim();
+            if (rodName) {
+                const list = getPlaces().filter(p => p.kind !== 'rod');
+                list.push({
+                    id: newId(), kind: 'rod', label: data[currentLang].myRod,
+                    name: rodName,
+                    address: document.getElementById('obRodAddr').value.trim(),
+                    phone: document.getElementById('obRodPhone').value.trim()
+                });
+                savePlacesList(list);
+            }
+
+            localStorage.setItem(ONBOARDED_KEY, '1');
+        }
+
+        function obNext(skip) {
+            if (obStep < 3) { obShow(obStep + 1); return; }
+            obSaveAll();
+            obFinish();
+        }
+
+        function obFinish() {
+            document.getElementById('obOverlay').style.display = 'none';
+            // подтягиваем всё, что заполнили
+            const savedGender = getGender();
+            if (savedGender) document.getElementById('gender-select').value = savedGender;
+            document.getElementById('mom-name-input').value = getMomName();
+            document.getElementById('baby-name-input').value = getBabyName();
+            document.getElementById('term-mode').value = getTermMode();
+            const lmp = localStorage.getItem(LMP_KEY); if (lmp) document.getElementById('lmp-date-input').value = lmp;
+            const due = getDueDate(); if (due) document.getElementById('due-date-input').value = due;
+            const conc = localStorage.getItem(CONC_KEY); if (conc) document.getElementById('conc-date-input').value = conc;
+            document.getElementById('cycle-input').value = localStorage.getItem(CYCLE_KEY) || 28;
+            const man = getManualTerm();
+            if (man) {
+                document.getElementById('manual-week').value = man.week;
+                document.getElementById('manual-days').value = man.days || 0;
+                document.getElementById('manual-date').value = man.date;
+            }
+            onTermModeChange();
+            renderTermCard();
+        }
+
+        function startOnboarding() {
+            obGender = getGender();
+            obSetGender(obGender);
+            document.getElementById('obMomName').value = getMomName();
+            document.getElementById('obBabyName').value = getBabyName();
+            document.getElementById('obOnDate').value = new Date().toISOString().slice(0, 10);
+            obModeChange();
+            obShow(0);
+            document.getElementById('obOverlay').style.display = 'flex';
+        }
+
         function openBagScreen() {
             renderPlaceChips();
             switchBag(0);
@@ -3485,12 +3815,16 @@ ${lines.join('\n')}
             document.getElementById('term-mode').value = getTermMode();
             onTermModeChange();
             document.getElementById('model-select').value = getModel();
+            document.getElementById('mom-name-input').value = getMomName();
+            document.getElementById('baby-name-input').value = getBabyName();
             const savedGender = getGender();
             if (savedGender) {
                 document.getElementById('gender-select').value = savedGender;
             }
             renderTermCard();
             loadChatHistory();
+
+            if (!localStorage.getItem(ONBOARDED_KEY)) startOnboarding();
 
             // Отправка по Enter
             document.getElementById('userInput').addEventListener('keydown', (e) => {
