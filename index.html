@@ -111,6 +111,24 @@
 
         /* КАЛЬКУЛЯТОР */
         .calc-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #f8fafc; flex-grow: 1; }
+        .place-card { background: #fff; border-radius: 18px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+        .place-cap { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .place-name { font-size: 16px; font-weight: 700; color: #334155; line-height: 1.3; }
+        .place-line { font-size: 13px; color: #64748b; margin-top: 5px; line-height: 1.4; }
+        .place-actions { display: flex; gap: 8px; margin-top: 13px; }
+        .place-btn { flex: 1; padding: 11px 8px; border-radius: 13px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .place-btn.call { background: #ff8fa3; color: #fff; }
+        .place-btn.route { background: #eef6ff; color: #3b7dd8; }
+        .place-btn.edit { background: #f8fafc; color: #64748b; flex: 0 0 46px; }
+        .place-empty { border: 1px dashed #ffb3c6; background: #fff7f9; text-align: center; padding: 18px; border-radius: 18px; margin-bottom: 12px; cursor: pointer; color: #e05a80; font-size: 14px; font-weight: 600; }
+        .sos-card { background: linear-gradient(135deg, #fff1f2, #ffe4e9); border-radius: 18px; padding: 16px; margin-bottom: 16px; }
+        .sos-btn { width: 100%; padding: 14px; border-radius: 14px; border: none; background: #e11d48; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .sos-text { font-size: 12px; color: #7f1d3a; line-height: 1.5; }
+        .search-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+        .search-chip { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 10px; font-size: 13px; font-weight: 600; color: #475569; cursor: pointer; text-align: left; }
+        .search-chip:active { background: #fff1f2; border-color: #ffb3c6; }
+        .geo-btn { width: 100%; padding: 12px; border-radius: 14px; border: 1px solid #ffb3c6; background: #fff7f9; color: #e05a80; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .geo-btn.on { background: #ff8fa3; color: #fff; border-color: #ff8fa3; }
         .bag-tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
         .bag-tab { flex: 1; min-width: 78px; padding: 10px 8px; border-radius: 13px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
         .bag-tab.active { background: #ff8fa3; border-color: #ff8fa3; color: #fff; }
@@ -302,7 +320,7 @@
                     <p id="menuPlanDesc">Свой график обследований и приёмов — ничего не забудется.</p>
                 </div>
 
-                <div class="menu-item" style="grid-column: span 2;" onclick="openScreen('mapScreen')">
+                <div class="menu-item" style="grid-column: span 2;" onclick="openMapScreen()">
                     <div class="icon">📍</div>
                     <h3 id="menuMapTitle">Роддомы и ЖК на карте</h3>
                     <p id="menuMapDesc">Рейтинги, контакты и честные отзывы из базы 2ГИС в твоем городе.</p>
@@ -632,45 +650,58 @@
         <div id="mapScreen" class="screen">
             <header>
                 <button class="back-btn" onclick="openScreen('mainScreen')">← Назад</button>
-                <div class="logo" style="font-size: 18px;" id="mapHeaderTitle">Медицинская карта</div>
+                <div class="logo" style="font-size: 18px;" id="mapHeaderTitle">Роддом и клиники</div>
                 <div style="width: 60px;"></div>
             </header>
 
-            <div class="map-body">
-                <div class="map-card">
-                    <p id="mapCardDesc">Выберите ваш город для быстрого поиска ближайших медицинских учреждений с отзывами и рейтингом в 2ГИС:</p>
-                    
-                    <select class="city-select" id="citySelector">
+            <div class="calc-body">
+                <div id="myPlaces"></div>
+
+                <div class="sos-card">
+                    <div class="sos-text" id="sosText">
+                        Вызывай скорую сразу, если началось кровотечение, отошли или подтекают воды, появилась сильная непрекращающаяся боль, поднялось давление или малыш перестал шевелиться.
+                    </div>
+                    <button class="sos-btn" onclick="callNumber('103')" id="sosBtn">📞 Скорая — 103</button>
+                </div>
+
+                <div class="place-card">
+                    <div class="place-cap" id="searchCap">Найти рядом</div>
+                    <select class="city-select" id="citySelector" style="margin-top:8px;">
                         <option value="almaty">Алматы</option>
                         <option value="astana">Астана</option>
                         <option value="shymkent">Шымкент</option>
                         <option value="karaganda">Караганда</option>
                         <option value="aktobe">Актобе</option>
+                        <option value="taraz">Тараз</option>
+                        <option value="pavlodar">Павлодар</option>
+                        <option value="ustkam">Усть-Каменогорск</option>
+                        <option value="semey">Семей</option>
+                        <option value="atyrau">Атырау</option>
+                        <option value="kostanay">Костанай</option>
+                        <option value="kyzylorda">Кызылорда</option>
+                        <option value="uralsk">Уральск</option>
+                        <option value="petropavlovsk">Петропавловск</option>
+                        <option value="aktau">Актау</option>
+                        <option value="kokshetau">Кокшетау</option>
+                        <option value="taldykorgan">Талдыкорган</option>
+                        <option value="temirtau">Темиртау</option>
+                        <option value="turkestan">Туркестан</option>
                     </select>
 
-                    <div class="map-search-btn gis-style" onclick="openGis('rod')">
-                        <div class="btn-info">
-                            <h4 id="btnGisRoddomTitle">Роддомы</h4>
-                            <p id="btnGisRoddomDesc">Поиск родильных домов и перинатальных центров</p>
-                        </div>
-                        <div class="btn-arrow">➔</div>
+                    <button class="geo-btn" id="geoBtn" onclick="toggleGeo()">📍 Искать рядом со мной</button>
+
+                    <div class="search-chips">
+                        <button class="search-chip" onclick="openGis('rod')" id="sRod">🏥 Роддома</button>
+                        <button class="search-chip" onclick="openGis('jk')" id="sJk">👩‍⚕️ Женские консультации</button>
+                        <button class="search-chip" onclick="openGis('uzi')" id="sUzi">🔎 УЗИ</button>
+                        <button class="search-chip" onclick="openGis('lab')" id="sLab">🧪 Лаборатории</button>
+                        <button class="search-chip" onclick="openGis('pharm')" id="sPharm">💊 Аптека 24 часа</button>
+                        <button class="search-chip" onclick="openGis('kids')" id="sKids">🧸 Детская поликлиника</button>
                     </div>
 
-                    <div class="map-search-btn gis-style" onclick="openGis('jk')">
-                        <div class="btn-info">
-                            <h4 id="btnGisJkTitle">Женские консультации</h4>
-                            <p id="btnGisJkDesc">Поиск ЖК и центров планирования семьи</p>
-                        </div>
-                        <div class="btn-arrow">➔</div>
-                    </div>
-
-                    <div id="localClinicsContainer" style="margin-top: 25px; display: none;">
-                        <h4 id="localClinicsTitle" style="margin: 0 0 15px 0; font-size: 16px; color: #ff8fa3; font-weight: 700; border-bottom: 2px solid #fff0f3; padding-bottom: 6px;">
-                            Проверенные клиники в Алматы
-                        </h4>
-                        <div id="clinicsList" style="display: flex; flex-direction: column; gap: 12px;"></div>
-                    </div>
-
+                    <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin-top:14px;" id="mapNote">
+                        Поиск откроется в 2ГИС — там свежие телефоны, отзывы и маршрут. Если приложение 2ГИС установлено, откроется сразу в нём.
+                    </p>
                 </div>
             </div>
         </div>
@@ -1231,97 +1262,6 @@
         // ==========================================
         // БАЗА ДАННЫХ КЛИНИК И ПЕРЕВОДЫ
         // ==========================================
-        const clinicsData = {
-            almaty: [
-                {
-                    name: "A CLINIC (филиал Ерменсай)",
-                    address: "мкр. Ерменсай, улица Арайлы, 12",
-                    specialty: "Реабилитация после болезней, прием терапевта и педиатра",
-                    schedule: "Пн–Сб: 08:00 – 17:00, Вс: выходной",
-                    rating: "3.8",
-                    reviews: "31 отзыв",
-                    link: "https://2gis.kz/almaty/firm/70000001053702157"
-                },
-                {
-                    name: "A CLINIC (филиал Жарокова)",
-                    address: "улица Жарокова, 275а",
-                    specialty: "Диагностика (УЗИ, ФГДС), реабилитация, стоматология",
-                    schedule: "Пн–Вс: 08:00 – 20:00 (без выходных)",
-                    rating: "4.0",
-                    reviews: "1103 отзыва",
-                    link: "https://2gis.kz/almaty/firm/70000001034440532"
-                },
-                {
-                    name: "Alatau Assistance (Mediker)",
-                    address: "улица Навои, 310 (1 этаж)",
-                    specialty: "Семейная медицина, ведение беременности, диагностика",
-                    schedule: "Пн–Пт: 08:00 – 19:00, Сб: 08:00 – 14:00, Вс: выходной",
-                    rating: "4.4",
-                    reviews: "742 отзыва",
-                    link: "https://2gis.kz/almaty/firm/70000001031317544"
-                }
-            ]
-        };
-
-        const localTitleTranslations = {
-            ru: "Проверенные клиники в Алматы",
-            kk: "Алматыдағы тексерілген емханалар"
-        };
-
-        // Функция отрисовки клиник
-        function renderLocalClinics() {
-            const city = document.getElementById('citySelector').value;
-            const container = document.getElementById('localClinicsContainer');
-            const list = document.getElementById('clinicsList');
-            const titleEl = document.getElementById('localClinicsTitle');
-
-            if (!container || !list || !titleEl) return;
-
-            titleEl.innerText = localTitleTranslations[currentLang];
-
-            if (clinicsData[city]) {
-                container.style.display = 'block';
-                list.innerHTML = ''; 
-
-                clinicsData[city].forEach(clinic => {
-                    const card = document.createElement('div');
-                    card.className = 'map-search-btn';
-                    card.style.flexDirection = 'column';
-                    card.style.alignItems = 'stretch';
-                    card.style.gap = '8px';
-                    card.style.borderLeft = '5px solid #ff8fa3'; 
-                    card.style.textDecoration = 'none';
-
-                    card.onclick = () => window.open(clinic.link, '_blank');
-
-                    card.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <div class="btn-info" style="max-width: 80%;">
-                                <h4 style="margin: 0 0 4px 0; font-size: 15px; color: #1e293b; font-weight: 700;">${clinic.name}</h4>
-                                <p style="margin: 0; font-size: 12px; color: #64748b;">📍 ${clinic.address}</p>
-                            </div>
-                            <div style="text-align: right; min-width: 60px;">
-                                <span style="font-size: 14px; font-weight: bold; color: #ff8fa3;">⭐ ${clinic.rating}</span>
-                                <p style="margin: 2px 0 0 0; font-size: 10px; color: #94a3b8;">${clinic.reviews}</p>
-                            </div>
-                        </div>
-                        <div style="font-size: 12px; color: #4e5d6c; line-height: 1.4; border-top: 1px dashed #f0f2f5; padding-top: 6px;">
-                            <strong>Специализация:</strong> ${clinic.specialty}<br>
-                            <strong>Режим работы:</strong> ${clinic.schedule}
-                        </div>
-                    `;
-                    list.appendChild(card);
-                });
-            } else {
-                container.style.display = 'none';
-            }
-        }
-
-
-        // ==========================================
-        // 2. ДАННЫЕ ЛОКАЛИЗАЦИИ И ИНТЕРФЕЙСА
-        // ==========================================
-
         const data = {
             ru: {
                 btn: 'ҚАЗ', back: '← Назад', placeholder: 'Напишите сообщение...',
@@ -1448,7 +1388,22 @@
                 r1: 'Выплата по беременности (на руки):', r2: 'Удержанный ОПВ (10% пенсионка):',
                 disc: '*Расчет является предварительным и базируется на стандартном коэффициенте 4.2 (126 дней больничного).',
                 bagHead: 'Сумка в роддом', cDocs: '1. Документы', cMother: '2. Маме', cBaby: '3. Малышу',
-                mapHead: 'Медицинская карта',
+                mapHead: 'Роддом и клиники',
+                myRod: 'Мой роддом', myJk: 'Моя женская консультация',
+                askName: 'как называется?', askPhone: 'Телефон (можно оставить пустым):',
+                askAddress: 'Адрес:', askDoctor: 'ФИО врача:', askRoom: 'Кабинет:',
+                roomShort: 'каб.', callBtn: 'Позвонить', routeBtn: 'Маршрут',
+                sosText: 'Вызывай скорую сразу, если началось кровотечение, отошли или подтекают воды, появилась сильная непрекращающаяся боль, поднялось давление или малыш перестал шевелиться.',
+                sosBtn: '📞 Скорая — 103',
+                searchCap: 'Найти рядом',
+                geoOff: 'Искать рядом со мной', geoOn: 'Ищем рядом с тобой', geoAsking: 'определяю...',
+                geoDenied: 'Не удалось определить местоположение. Поиск пойдёт по выбранному городу.',
+                geoUnsupported: 'Браузер не умеет определять местоположение.',
+                mapNote: 'Поиск откроется в 2ГИС — там свежие телефоны, отзывы и маршрут. Если приложение 2ГИС установлено, откроется сразу в нём.',
+                gisQueries: { rod: 'Роддом', jk: 'Женская консультация', uzi: 'УЗИ при беременности',
+                              lab: 'Медицинская лаборатория', pharm: 'Круглосуточная аптека', kids: 'Детская поликлиника' },
+                sRod: '🏥 Роддома', sJk: '👩‍⚕️ Женские консультации', sUzi: '🔎 УЗИ',
+                sLab: '🧪 Лаборатории', sPharm: '💊 Аптека 24 часа', sKids: '🧸 Детская поликлиника',
                 mapCard: 'Выберите ваш город для быстрого поиска ближайших медицинских учреждений с отзывами и рейтингом в 2ГИС:',
                 gRodTitle: 'Роддомы', gRodDesc: 'Поиск родильных домов и перинатальных центров',
                 gJkTitle: 'Женские консультации', gJkDesc: 'Поиск ЖК и центров планирования семьи',
@@ -1582,7 +1537,22 @@
                 r1: 'Жүктілік бойынша төлем (қолға):', r2: 'Ұсталған МЗЖ (10% зейнетақы):',
                 disc: '*Есептеу алдын ала жүргізілген және 4.2 стандартты коэффициентке (126 күндік еңбекке жарамсыздық парағы) негеделген.',
                 bagHead: 'Перзентхана сөмкесі', cDocs: '1. Құжаттар', cMother: '2. Анаға', cBaby: '3. Балаға',
-                mapHead: 'Медициналық карта',
+                mapHead: 'Перзентхана мен емханалар',
+                myRod: 'Менің перзентханам', myJk: 'Менің әйелдер кеңесім',
+                askName: 'қалай аталады?', askPhone: 'Телефон (бос қалдыруға болады):',
+                askAddress: 'Мекенжайы:', askDoctor: 'Дәрігердің аты-жөні:', askRoom: 'Кабинет:',
+                roomShort: 'каб.', callBtn: 'Қоңырау шалу', routeBtn: 'Бағыт',
+                sosText: 'Қан кетсе, су кетсе немесе ағып жатса, қатты басылмайтын ауырсыну болса, қысым көтерілсе немесе нәресте қимылдауын қойса — дереу жедел жәрдем шақыр.',
+                sosBtn: '📞 Жедел жәрдем — 103',
+                searchCap: 'Жақын жерден табу',
+                geoOff: 'Жақын маңнан іздеу', geoOn: 'Жаныңнан іздеп жатырмыз', geoAsking: 'анықтап жатырмын...',
+                geoDenied: 'Орналасқан жерді анықтау мүмкін болмады. Іздеу таңдалған қала бойынша жүреді.',
+                geoUnsupported: 'Браузер орналасқан жерді анықтай алмайды.',
+                mapNote: 'Іздеу 2ГИС-те ашылады — онда жаңа телефондар, пікірлер мен бағыт бар. 2ГИС қосымшасы орнатылған болса, бірден сонда ашылады.',
+                gisQueries: { rod: 'Перзентхана', jk: 'Әйелдер консультациясы', uzi: 'Жүктілік кезіндегі УДЗ',
+                              lab: 'Медициналық зертхана', pharm: 'Тәулік бойы дәріхана', kids: 'Балалар емханасы' },
+                sRod: '🏥 Перзентханалар', sJk: '👩‍⚕️ Әйелдер кеңесі', sUzi: '🔎 УДЗ',
+                sLab: '🧪 Зертханалар', sPharm: '💊 Тәулік бойы дәріхана', sKids: '🧸 Балалар емханасы',
                 mapCard: 'Жақын маңдағы медициналық мекемелерді пікірлерімен және рейтингімен 2ГИС-тен жылдам іздеу үшін қалаңызды таңдаңыз:',
                 gRodTitle: 'Перзентханалар', gRodDesc: 'Босану үйлері мен перинаталдық орталықтарды іздеу',
                 gJkTitle: 'Әйелдер консультациясы', gJkDesc: 'Әйелдер консультациясы мен отбасын жоспарлау орталықтарын іздеу',
@@ -1625,11 +1595,20 @@
             
             // Перевод элементов карты
             document.getElementById('mapHeaderTitle').innerText = data[currentLang].mapHead;
-            document.getElementById('mapCardDesc').innerText = data[currentLang].mapCard;
-            document.getElementById('btnGisRoddomTitle').innerText = data[currentLang].gRodTitle;
-            document.getElementById('btnGisRoddomDesc').innerText = data[currentLang].gRodDesc;
-            document.getElementById('btnGisJkTitle').innerText = data[currentLang].gJkTitle;
-            document.getElementById('btnGisJkDesc').innerText = data[currentLang].gJkDesc;
+            document.getElementById('sosText').innerText = data[currentLang].sosText;
+            document.getElementById('sosBtn').innerText = data[currentLang].sosBtn;
+            document.getElementById('searchCap').innerText = data[currentLang].searchCap;
+            document.getElementById('mapNote').innerText = data[currentLang].mapNote;
+            ['sRod','sJk','sUzi','sLab','sPharm','sKids'].forEach(k => {
+                document.getElementById(k).innerText = data[currentLang][k];
+            });
+            document.getElementById('geoBtn').innerText = '📍 ' + (geoOn ? data[currentLang].geoOn : data[currentLang].geoOff);
+            if (document.getElementById('mapScreen').classList.contains('active')) renderPlaces();
+            document.getElementById('').innerText = data[currentLang].mapCard;
+            document.getElementById('').innerText = data[currentLang].gRodTitle;
+            document.getElementById('').innerText = data[currentLang].gRodDesc;
+            document.getElementById('').innerText = data[currentLang].gJkTitle;
+            document.getElementById('').innerText = data[currentLang].gJkDesc;
 
             // Перевод настроек
             document.getElementById('settingsHeaderTitle').innerText = data[currentLang].settingsHead;
@@ -1724,8 +1703,6 @@
             if (chatHistory.length === 0) {
                  document.getElementById('aiGreeting').innerText = data[currentLang].greeting;
             }
-
-            renderLocalClinics();
         }
 
         function calculateMaternity() {
@@ -3019,6 +2996,183 @@
             }
         }
 
+        // ==========================================
+        // МОИ МЕСТА: РОДДОМ И ЖЕНСКАЯ КОНСУЛЬТАЦИЯ
+        // ==========================================
+        const PLACES_KEY = 'ayala_places';
+        let geoOn = false;
+        let geoCoords = null;
+
+        function getPlaces() {
+            try {
+                const v = JSON.parse(localStorage.getItem(PLACES_KEY));
+                return (v && typeof v === 'object') ? v : {};
+            } catch (e) { return {}; }
+        }
+        function savePlaces(p) {
+            try { localStorage.setItem(PLACES_KEY, JSON.stringify(p)); }
+            catch (e) { console.error('Не удалось сохранить места:', e); }
+        }
+
+        function callNumber(num) {
+            if (!num) return;
+            window.location.href = 'tel:' + num.replace(/[^\d+]/g, '');
+        }
+
+        function routeTo(place) {
+            const city = document.getElementById('citySelector').value;
+            const q = encodeURIComponent(place.address || place.name || '');
+            window.open(`https://2gis.kz/${city}/search/${q}`, '_blank');
+        }
+
+        // Заполнение карточки по одному вопросу за раз — так проще на телефоне
+        function editPlace(kind) {
+            const places = getPlaces();
+            const cur = places[kind] || {};
+            const t = data[currentLang];
+            const label = kind === 'rod' ? t.myRod : t.myJk;
+
+            const name = prompt(label + ' — ' + t.askName, cur.name || '');
+            if (name === null) return;
+            if (!name.trim()) {                       // пустое имя — удалить карточку
+                if (cur.name && confirm(t.confirmDeleteItem)) { delete places[kind]; savePlaces(places); renderPlaces(); }
+                return;
+            }
+            const phone = prompt(t.askPhone, cur.phone || '');
+            if (phone === null) return;
+            const address = prompt(t.askAddress, cur.address || '');
+            if (address === null) return;
+            const doctor = prompt(t.askDoctor, cur.doctor || '');
+            if (doctor === null) return;
+            const room = prompt(t.askRoom, cur.room || '');
+            if (room === null) return;
+
+            places[kind] = {
+                name: name.trim(), phone: (phone || '').trim(), address: (address || '').trim(),
+                doctor: (doctor || '').trim(), room: (room || '').trim()
+            };
+            savePlaces(places);
+            renderPlaces();
+        }
+
+        function renderPlaces() {
+            const box = document.getElementById('myPlaces');
+            const places = getPlaces();
+            const t = data[currentLang];
+            box.innerHTML = '';
+
+            [['rod', t.myRod], ['jk', t.myJk]].forEach(([kind, caption]) => {
+                const p = places[kind];
+
+                if (!p) {
+                    const empty = document.createElement('div');
+                    empty.className = 'place-empty';
+                    empty.innerText = '+ ' + caption;
+                    empty.onclick = () => editPlace(kind);
+                    box.appendChild(empty);
+                    return;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'place-card';
+
+                const cap = document.createElement('div');
+                cap.className = 'place-cap';
+                cap.innerText = caption;
+                card.appendChild(cap);
+
+                const nm = document.createElement('div');
+                nm.className = 'place-name';
+                nm.innerText = p.name;
+                card.appendChild(nm);
+
+                const lines = [];
+                if (p.address) lines.push('📍 ' + p.address);
+                if (p.doctor) lines.push('👩‍⚕️ ' + p.doctor + (p.room ? ' • ' + t.roomShort + ' ' + p.room : ''));
+                else if (p.room) lines.push(t.roomShort + ' ' + p.room);
+                if (p.phone) lines.push('📞 ' + p.phone);
+                lines.forEach(txt => {
+                    const el = document.createElement('div');
+                    el.className = 'place-line';
+                    el.innerText = txt;
+                    card.appendChild(el);
+                });
+
+                const actions = document.createElement('div');
+                actions.className = 'place-actions';
+
+                if (p.phone) {
+                    const call = document.createElement('button');
+                    call.className = 'place-btn call';
+                    call.innerText = '📞 ' + t.callBtn;
+                    call.onclick = () => callNumber(p.phone);
+                    actions.appendChild(call);
+                }
+
+                const route = document.createElement('button');
+                route.className = 'place-btn route';
+                route.innerText = '🗺 ' + t.routeBtn;
+                route.onclick = () => routeTo(p);
+                actions.appendChild(route);
+
+                const edit = document.createElement('button');
+                edit.className = 'place-btn edit';
+                edit.innerText = '✏️';
+                edit.onclick = () => editPlace(kind);
+                actions.appendChild(edit);
+
+                card.appendChild(actions);
+                box.appendChild(card);
+            });
+        }
+
+        function toggleGeo() {
+            const btn = document.getElementById('geoBtn');
+            const t = data[currentLang];
+
+            if (geoOn) {                       // выключаем
+                geoOn = false; geoCoords = null;
+                btn.classList.remove('on');
+                btn.innerText = '📍 ' + t.geoOff;
+                return;
+            }
+            if (!navigator.geolocation) { alert(t.geoUnsupported); return; }
+
+            btn.innerText = t.geoAsking;
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    geoCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+                    geoOn = true;
+                    btn.classList.add('on');
+                    btn.innerText = '📍 ' + t.geoOn;
+                },
+                err => {
+                    console.error('Геолокация недоступна:', err);
+                    btn.innerText = '📍 ' + t.geoOff;
+                    alert(t.geoDenied);
+                },
+                { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+            );
+        }
+
+        function openGis(type) {
+            const city = document.getElementById('citySelector').value;
+            const q = data[currentLang].gisQueries[type] || '';
+            let url = `https://2gis.kz/${city}/search/${encodeURIComponent(q)}`;
+            // с координатами 2ГИС покажет то, что рядом, а не центр города
+            if (geoOn && geoCoords) {
+                url += `/center/${geoCoords.lon.toFixed(6)},${geoCoords.lat.toFixed(6)}/zoom/14`;
+            }
+            window.open(url, '_blank');
+        }
+
+        function openMapScreen() {
+            renderPlaces();
+            const btn = document.getElementById('geoBtn');
+            btn.innerText = '📍 ' + (geoOn ? data[currentLang].geoOn : data[currentLang].geoOff);
+            openScreen('mapScreen');
+        }
+
         function openBagScreen() {
             renderPlaceChips();
             switchBag(0);
@@ -3204,7 +3358,6 @@
 
         // Инициализируем отрисовку клиник и предзаполнение ключа
         window.addEventListener('DOMContentLoaded', () => {
-            renderLocalClinics();
             const savedKey = getApiKey();
             if (savedKey) {
                 document.getElementById('api-key-input').value = savedKey;
