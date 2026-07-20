@@ -704,13 +704,28 @@
                     <select class="calc-input" id="term-mode" onchange="onTermModeChange()">
                         <option value="lmp" id="optLmp">По первому дню последних месячных</option>
                         <option value="manual" id="optManual">Указать неделю вручную</option>
+                        <option value="conception" id="optConc">По дате зачатия или переноса (ЭКО)</option>
                         <option value="due" id="optDue">По дате родов (ПДР)</option>
                     </select>
                 </div>
 
-                <div class="input-group" id="termLmpBlock" style="margin-top: 14px;">
-                    <label id="labelLmpDate">Первый день последних месячных:</label>
-                    <input type="date" class="calc-input" id="lmp-date-input">
+                <div id="termLmpBlock" style="margin-top: 14px;">
+                    <div class="input-group">
+                        <label id="labelLmpDate">Первый день последних месячных:</label>
+                        <input type="date" class="calc-input" id="lmp-date-input">
+                    </div>
+                    <div class="input-group" style="margin-top: 10px;">
+                        <label id="labelCycle">Длина цикла, дней:</label>
+                        <input type="number" class="calc-input" id="cycle-input" min="20" max="45" placeholder="28">
+                    </div>
+                    <p style="font-size:11px; color:#94a3b8; line-height:1.4; margin-top:6px;" id="cycleHelp">
+                        Обычно 28 дней. Если у тебя длиннее или короче — укажи свою, иначе срок сдвинется на несколько дней.
+                    </p>
+                </div>
+
+                <div class="input-group" id="termConcBlock" style="display: none; margin-top: 14px;">
+                    <label id="labelConcDate">Дата зачатия или переноса эмбриона:</label>
+                    <input type="date" class="calc-input" id="conc-date-input">
                 </div>
 
                 <div id="termManualBlock" style="display: none; margin-top: 14px;">
@@ -859,9 +874,49 @@
 
         function onTermModeChange() {
             const mode = document.getElementById('term-mode').value;
-            document.getElementById('termLmpBlock').style.display = mode === 'lmp' ? 'flex' : 'none';
+            document.getElementById('termLmpBlock').style.display = mode === 'lmp' ? 'block' : 'none';
             document.getElementById('termManualBlock').style.display = mode === 'manual' ? 'block' : 'none';
             document.getElementById('termDueBlock').style.display = mode === 'due' ? 'flex' : 'none';
+            document.getElementById('termConcBlock').style.display = mode === 'conception' ? 'flex' : 'none';
+        }
+
+        // Все способы сводим к одной опорной дате — расчётному первому дню
+        // последних месячных. Дальше срок считается только от неё.
+        const ANCHOR_KEY = 'ayala_lmp_anchor';
+        const CYCLE_KEY = 'ayala_cycle';
+        const CONC_KEY = 'ayala_conception';
+
+        function addDays(dateStr, n) {
+            const d = new Date(dateStr + 'T00:00:00');
+            if (isNaN(d.getTime())) return null;
+            d.setDate(d.getDate() + n);
+            return d.toISOString().slice(0, 10);
+        }
+
+        function computeAnchor(mode) {
+            if (mode === 'lmp') {
+                const lmp = document.getElementById('lmp-date-input').value;
+                if (!lmp) return null;
+                const cycle = parseInt(document.getElementById('cycle-input').value, 10);
+                const shift = (!isNaN(cycle) && cycle >= 20 && cycle <= 45) ? cycle - 28 : 0;
+                return addDays(lmp, shift);          // длинный цикл — овуляция позже
+            }
+            if (mode === 'due') {
+                const due = document.getElementById('due-date-input').value;
+                return due ? addDays(due, -280) : null;
+            }
+            if (mode === 'conception') {
+                const c = document.getElementById('conc-date-input').value;
+                return c ? addDays(c, -14) : null;   // зачатие ≈ через 2 недели после ПДПМ
+            }
+            if (mode === 'manual') {
+                const w = parseInt(document.getElementById('manual-week').value, 10);
+                if (isNaN(w)) return null;
+                const d = parseInt(document.getElementById('manual-days').value, 10) || 0;
+                const on = document.getElementById('manual-date').value || new Date().toISOString().slice(0, 10);
+                return addDays(on, -(w * 7 + d));
+            }
+            return null;
         }
 
         function getManualTerm() {
@@ -884,22 +939,25 @@
             const mode = document.getElementById('term-mode').value;
             localStorage.setItem(TERM_MODE_KEY, mode);
 
-            if (mode === 'due') {
-                const v = document.getElementById('due-date-input').value;
-                if (v) localStorage.setItem(DUE_DATE_KEY, v); else localStorage.removeItem(DUE_DATE_KEY);
-            } else if (mode === 'lmp') {
-                const v = document.getElementById('lmp-date-input').value;
-                if (v) localStorage.setItem(LMP_KEY, v); else localStorage.removeItem(LMP_KEY);
-            } else {
-                const w = parseInt(document.getElementById('manual-week').value, 10);
-                const d = parseInt(document.getElementById('manual-days').value, 10) || 0;
-                const date = document.getElementById('manual-date').value || new Date().toISOString().slice(0, 10);
-                if (!isNaN(w)) {
-                    localStorage.setItem(MANUAL_KEY, JSON.stringify({ week: w, days: d, date: date }));
-                } else {
-                    localStorage.removeItem(MANUAL_KEY);
-                }
+            // сохраняем исходные поля, чтобы их можно было отредактировать позже
+            const setOrDrop = (key, val) => val ? localStorage.setItem(key, val) : localStorage.removeItem(key);
+            setOrDrop(DUE_DATE_KEY, document.getElementById('due-date-input').value);
+            setOrDrop(LMP_KEY, document.getElementById('lmp-date-input').value);
+            setOrDrop(CONC_KEY, document.getElementById('conc-date-input').value);
+            setOrDrop(CYCLE_KEY, document.getElementById('cycle-input').value);
+
+            const w = parseInt(document.getElementById('manual-week').value, 10);
+            if (!isNaN(w)) {
+                localStorage.setItem(MANUAL_KEY, JSON.stringify({
+                    week: w,
+                    days: parseInt(document.getElementById('manual-days').value, 10) || 0,
+                    date: document.getElementById('manual-date').value || new Date().toISOString().slice(0, 10)
+                }));
             }
+
+            const anchor = computeAnchor(mode);
+            if (anchor) localStorage.setItem(ANCHOR_KEY, anchor);
+            else localStorage.removeItem(ANCHOR_KEY);
 
             renderTermCard();
             const p = calcPregnancy();
@@ -909,36 +967,24 @@
 
         // Считаем акушерский срок: беременность = 280 дней до ПДР
         function calcPregnancy() {
-            const mode = getTermMode();
-            let totalDays = null;
+            let anchor = localStorage.getItem(ANCHOR_KEY);
 
-            if (mode === 'lmp') {
-                // акушерский срок и есть время от первого дня последних месячных
-                const lmp = localStorage.getItem(LMP_KEY);
-                if (!lmp) return null;
-                totalDays = daysSince(lmp);
-            } else if (mode === 'manual') {
-                // врач назвал срок на конкретную дату — дальше отсчитываем сами
-                const m = getManualTerm();
-                if (!m) return null;
-                const passed = daysSince(m.date);
-                if (passed === null) return null;
-                totalDays = m.week * 7 + (m.days || 0) + passed;
-            } else {
+            // старые настройки: если опорной даты ещё нет, выводим её из ПДР
+            if (!anchor) {
                 const due = getDueDate();
-                if (!due) return null;
-                const dueMs = new Date(due + 'T00:00:00').getTime();
-                if (isNaN(dueMs)) return null;
-                const today0 = new Date();
-                today0.setHours(0, 0, 0, 0);
-                totalDays = 280 - Math.round((dueMs - today0.getTime()) / 86400000);
+                if (due) {
+                    anchor = addDays(due, -280);
+                    if (anchor) localStorage.setItem(ANCHOR_KEY, anchor);
+                }
             }
+            if (!anchor) return null;
 
+            const totalDays = daysSince(anchor);
             if (totalDays === null || isNaN(totalDays)) return null;
             const daysLeft = 280 - totalDays;
 
             // защита от бессмысленных дат (опечатка в годе и т.п.)
-            if (totalDays < 0 || totalDays > 315) return null;
+            if (totalDays < 0 || totalDays > 300) return null;   // до 42 недель + запас
 
             const week = Math.floor(totalDays / 7);
             const days = totalDays % 7;
@@ -1285,6 +1331,10 @@
                 trimesterWord: 'триместр',
                 labelDueDate: 'Предполагаемая дата родов (ПДР):',
                 labelTermMode: 'Как считаем срок:',
+                optConc: 'По дате зачатия или переноса (ЭКО)',
+                labelConcDate: 'Дата зачатия или переноса эмбриона:',
+                labelCycle: 'Длина цикла, дней:',
+                cycleHelp: 'Обычно 28 дней. Если у тебя длиннее или короче — укажи свою, иначе срок сдвинется на несколько дней.',
                 optLmp: 'По первому дню последних месячных',
                 optManual: 'Указать неделю вручную',
                 optDue: 'По дате родов (ПДР)',
@@ -1409,6 +1459,10 @@
                 trimesterWord: 'триместр',
                 labelDueDate: 'Болжамды босану күні (ББК):',
                 labelTermMode: 'Мерзімді қалай санаймыз:',
+                optConc: 'Ұрықтану немесе көшіру күні бойынша (ЭКҰ)',
+                labelConcDate: 'Ұрықтану немесе эмбрион көшіру күні:',
+                labelCycle: 'Цикл ұзақтығы, күн:',
+                cycleHelp: 'Әдетте 28 күн. Сенікі ұзағырақ немесе қысқарақ болса — өзіңдікін көрсет, әйтпесе мерзім бірнеше күнге жылжиды.',
                 optLmp: 'Соңғы етеккірдің бірінші күні бойынша',
                 optManual: 'Аптаны қолмен көрсету',
                 optDue: 'Босану күні (ББК) бойынша',
@@ -1571,6 +1625,10 @@
             document.getElementById('optLmp').innerText = data[currentLang].optLmp;
             document.getElementById('optManual').innerText = data[currentLang].optManual;
             document.getElementById('optDue').innerText = data[currentLang].optDue;
+            document.getElementById('optConc').innerText = data[currentLang].optConc;
+            document.getElementById('labelConcDate').innerText = data[currentLang].labelConcDate;
+            document.getElementById('labelCycle').innerText = data[currentLang].labelCycle;
+            document.getElementById('cycleHelp').innerText = data[currentLang].cycleHelp;
             document.getElementById('labelLmpDate').innerText = data[currentLang].labelLmpDate;
             document.getElementById('labelManualWeek').innerText = data[currentLang].labelManualWeek;
             document.getElementById('labelManualDays').innerText = data[currentLang].labelManualDays;
@@ -1963,6 +2021,8 @@
             38: { len: 49.8, w: 3083, home: "стандартная подушка 🛏️", kz: "бесик — во всю длину", fact: "Хватательный рефлекс уже сильный — схватит твой палец" },
             39: { len: 50.7, w: 3288, home: "клавиатура с цифрами ⌨️", kz: "корпе для малыша", fact: "Набирает последние граммы перед родами" },
             40: { len: 51.2, w: 3462, home: "дорожная сумка 🧳", kz: "одеяло-конверт на выписку 💕", fact: "Ждёт своего дня. Совсем скоро 💕" },
+            41: { len: 51.7, w: 3600, home: "гитарный чехол — ширина 🎸", kz: "бесик с матрасиком 🛏️", fact: "Просто не спешит — так бывает у многих, и это нормально 🌸" },
+            42: { len: 52.0, w: 3700, home: "дорожный чемодан ручной клади 🧳", kz: "готовое приданое малыша 💕", fact: "Врач будет наблюдать особенно внимательно — держись рядом с ним" },
         };
 
         let babyViewWeek = null;
@@ -2129,13 +2189,13 @@
             renderThemeChips();
             document.getElementById('themeInput').value = getBabyTheme();
             const p = calcPregnancy();
-            babyViewWeek = p ? Math.min(40, Math.max(5, p.week + 1)) : 20;
+            babyViewWeek = p ? Math.min(42, Math.max(5, p.week + 1)) : 20;
             renderBabyWeek();
             openScreen('babyScreen');
         }
 
         function changeBabyWeek(delta) {
-            babyViewWeek = Math.min(40, Math.max(5, babyViewWeek + delta));
+            babyViewWeek = Math.min(42, Math.max(5, babyViewWeek + delta));
             renderBabyWeek();
         }
 
@@ -2152,7 +2212,7 @@
             renderThemeCompare(babyViewWeek);
 
             document.getElementById('babyPrev').disabled = babyViewWeek <= 5;
-            document.getElementById('babyNext').disabled = babyViewWeek >= 40;
+            document.getElementById('babyNext').disabled = babyViewWeek >= 42;
         }
 
         // ==========================================
@@ -2977,6 +3037,9 @@
             if (savedDue) document.getElementById('due-date-input').value = savedDue;
             const savedLmp = localStorage.getItem(LMP_KEY);
             if (savedLmp) document.getElementById('lmp-date-input').value = savedLmp;
+            const savedConc = localStorage.getItem(CONC_KEY);
+            if (savedConc) document.getElementById('conc-date-input').value = savedConc;
+            document.getElementById('cycle-input').value = localStorage.getItem(CYCLE_KEY) || 28;
             const savedManual = getManualTerm();
             if (savedManual) {
                 document.getElementById('manual-week').value = savedManual.week;
