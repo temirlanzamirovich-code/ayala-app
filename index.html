@@ -11,9 +11,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Ayala">
 <link rel="apple-touch-icon" href="icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Onest', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #f7f9fa;
             margin: 0;
             padding: 0;
@@ -56,18 +59,39 @@
             color: #4e5d6c;
         }
 
-        /* Главный экран */
-        .welcome-card {
-            background: linear-gradient(135deg, #fff0f3 0%, #ffccd5 100%);
-            margin: 20px;
-            padding: 25px;
-            border-radius: 24px;
-            color: #3d0c11;
+        /* --- Герой главного экрана --- */
+        .hero {
+            margin: 18px 20px 16px 20px;
+            padding: 22px 20px 20px 20px;
+            border-radius: 26px;
+            background: linear-gradient(158deg, #fff6f8 0%, #ffe9ef 62%, #ffdfe8 100%);
+            cursor: pointer;
         }
-        .welcome-card h1 { margin: 0 0 10px 0; font-size: 22px; font-weight: 700; }
-        .welcome-card p { margin: 0; font-size: 15px; opacity: 0.8; line-height: 1.4; }
+        .hero-greet { font-size: 14px; font-weight: 500; color: #a4657a; margin-bottom: 10px; }
+        .hero-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+        .hero-week { font-size: 27px; font-weight: 800; color: #43222c; letter-spacing: -0.6px; line-height: 1.1; }
+        .hero-left { font-size: 13px; font-weight: 600; color: #b0697f; white-space: nowrap; }
+        .hero-sub { font-size: 12.5px; color: #a4849380; color: #9d7684; margin-top: 6px; }
+        .hero-fact { font-size: 13px; color: #6f4d59; line-height: 1.45; margin-top: 14px; }
 
-        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px 30px 20px; }
+        /* сорок недель — сорок точек, по триместрам */
+        .week-dots { display: flex; gap: 9px; margin-top: 16px; }
+        .trimester { display: flex; gap: 3px; flex: 1; }
+        .wdot { flex: 1; height: 6px; border-radius: 3px; background: #ffffff8c; }
+        .wdot.done { background: #ff8fa3; }
+        .wdot.now { background: #43222c; box-shadow: 0 0 0 2px #ffffffcc; }
+
+        .hero-empty { text-align: left; }
+        .hero-empty-text { font-size: 15px; font-weight: 600; color: #43222c; line-height: 1.4; }
+
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 20px 30px 20px; }
+        .icon.i-chat { background: #ffe4ea; }
+        .icon.i-baby { background: #e4f6ec; }
+        .icon.i-kick { background: #efe9fd; }
+        .icon.i-plan { background: #e5effd; }
+        .icon.i-bag  { background: #fdeddf; }
+        .icon.i-map  { background: #ddf3f2; }
+        .icon.i-calc { background: #fcf1d6; }
         .menu-item {
             background-color: #f8fafc;
             border: 1px solid #edf2f7;
@@ -80,7 +104,11 @@
             transition: all 0.2s ease;
         }
         .menu-item:active { transform: scale(0.97); background-color: #f1f5f9; }
-        .icon { font-size: 28px; margin-bottom: 12px; }
+        .icon {
+            width: 42px; height: 42px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 21px; margin-bottom: 11px; background: #f1f5f9;
+        }
         .menu-item h3 { margin: 0 0 6px 0; font-size: 16px; font-weight: 600; color: #1e293b; }
         .menu-item p { margin: 0; font-size: 12px; color: #64748b; line-height: 1.3; }
 
@@ -394,65 +422,63 @@
                 </div>
             </header>
 
-            <div class="welcome-card">
-                <h1 id="welcomeTitle">Привет, будущая мама!</h1>
-                <p id="welcomeDesc">Твой уютный цифровой помощник на пути к самому главному чуду.</p>
-            </div>
-
-            <div class="term-card" id="termCard" style="display: none;" onclick="openScreen('settingsScreen')">
-                <div class="term-top">
-                    <div class="term-week" id="termWeek"></div>
-                    <div class="term-left" id="termLeft"></div>
+            <div class="hero" id="termCard" style="display: none;" onclick="openBabyScreen()">
+                <div class="hero-greet" id="heroGreet"></div>
+                <div class="hero-row">
+                    <div class="hero-week" id="termWeek"></div>
+                    <div class="hero-left" id="termLeft"></div>
                 </div>
-                <div class="term-sub" id="termSub"></div>
-                <div class="term-bar"><div class="term-bar-fill" id="termBarFill"></div></div>
+                <div class="hero-sub" id="termSub"></div>
+                <div class="week-dots" id="weekDots"></div>
+                <div class="hero-fact" id="heroFact"></div>
             </div>
 
-            <div class="term-empty" id="termEmpty" style="display: none;" onclick="openScreen('settingsScreen')">
-                <span id="termEmptyText">📅 Укажи дату родов — и Аяла будет знать твой срок</span>
+            <div class="hero hero-empty" id="termEmpty" style="display: none;" onclick="openScreen('settingsScreen')">
+                <div class="hero-greet" id="heroGreetEmpty"></div>
+                <div class="hero-empty-text" id="termEmptyText">Укажи срок — и я буду считать недели вместе с тобой</div>
             </div>
 
             <div class="menu-grid">
-                <div class="menu-item ai-special" onclick="openScreen('chatScreen')">
-                    <div class="icon">✨</div>
+                <div class="menu-item ai-special" style="grid-column: span 2;" onclick="openScreen('chatScreen')">
+                    <div class="icon i-chat">💬</div>
                     <h3 id="menuAiTitle">Чат с ИИ Аялой</h3>
                     <p id="menuAiDesc">Задай любой вопрос о беременности, здоровье и уходе за малышом в режиме реального времени.</p>
                 </div>
 
-                <div class="menu-item" onclick="openScreen('calcScreen')">
-                    <div class="icon">🧮</div>
-                    <h3 id="menuCalcTitle">Декретные в РК</h3>
-                    <p id="menuCalcDesc">Рассчитай точный размер пособий по законам Казахстана.</p>
-                </div>
-
-                <div class="menu-item" onclick="openBagScreen()">
-                    <div class="icon">👜</div>
-                    <h3 id="menuBagTitle">В роддом</h3>
-                    <p id="menuBagDesc">Интерактивный список покупок и вещей для мамы и малыша.</p>
-                </div>
-
                 <div class="menu-item" onclick="openBabyScreen()">
-                    <div class="icon">🌱</div>
+                    <div class="icon i-baby">🌱</div>
                     <h3 id="menuBabyTitle">Малыш по неделям</h3>
                     <p id="menuBabyDesc">Размер, вес и на что похож твой малыш прямо сейчас.</p>
                 </div>
 
                 <div class="menu-item" onclick="openKickScreen()">
-                    <div class="icon">👣</div>
+                    <div class="icon i-kick">👣</div>
                     <h3 id="menuKickTitle">Дневник шевелений</h3>
                     <p id="menuKickDesc">Считай толчки малыша с таймером и следи за его ритмом.</p>
                 </div>
 
                 <div class="menu-item" style="grid-column: span 2;" onclick="openPlanScreen()">
-                    <div class="icon">📋</div>
+                    <div class="icon i-plan">📋</div>
                     <h3 id="menuPlanTitle">Анализы и визиты</h3>
                     <p id="menuPlanDesc">Свой график обследований и приёмов — ничего не забудется.</p>
                 </div>
 
-                <div class="menu-item" style="grid-column: span 2;" onclick="openMapScreen()">
-                    <div class="icon">📍</div>
+                <div class="menu-item" onclick="openBagScreen()">
+                    <div class="icon i-bag">👜</div>
+                    <h3 id="menuBagTitle">В роддом</h3>
+                    <p id="menuBagDesc">Три сумки, количество вещей и список покупок.</p>
+                </div>
+
+                <div class="menu-item" onclick="openMapScreen()">
+                    <div class="icon i-map">📍</div>
                     <h3 id="menuMapTitle">Роддом и клиники</h3>
-                    <p id="menuMapDesc">Рейтинги, контакты и честные отзывы из базы 2ГИС в твоем городе.</p>
+                    <p id="menuMapDesc">Свой роддом под рукой и поиск рядом с тобой.</p>
+                </div>
+
+                <div class="menu-item" style="grid-column: span 2;" onclick="openScreen('calcScreen')">
+                    <div class="icon i-calc">🧮</div>
+                    <h3 id="menuCalcTitle">Декретные в РК</h3>
+                    <p id="menuCalcDesc">Рассчитай точный размер пособий по законам Казахстана.</p>
                 </div>
             </div>
         </div>
@@ -1161,6 +1187,32 @@
             return { week, days, daysLeft, trimester, progress };
         }
 
+        // Сорок точек — сорок недель, сгруппированных по триместрам
+        function renderWeekDots(currentWeek) {
+            const box = document.getElementById('weekDots');
+            if (!box) return;
+            box.innerHTML = '';
+            const groups = [[1, 13], [14, 27], [28, 40]];
+            groups.forEach(([from, to]) => {
+                const g = document.createElement('div');
+                g.className = 'trimester';
+                for (let w = from; w <= to; w++) {
+                    const d = document.createElement('div');
+                    d.className = 'wdot' + (w < currentWeek ? ' done' : (w === currentWeek ? ' now' : ''));
+                    g.appendChild(d);
+                }
+                box.appendChild(g);
+            });
+        }
+
+        function greetingText() {
+            const t = data[currentLang];
+            const h = new Date().getHours();
+            const part = h < 5 ? t.greetNight : (h < 12 ? t.greetMorning : (h < 18 ? t.greetDay : t.greetEvening));
+            const name = getMomName();
+            return name ? part + ', ' + name : part;
+        }
+
         function renderTermCard() {
             const card = document.getElementById('termCard');
             const empty = document.getElementById('termEmpty');
@@ -1169,12 +1221,14 @@
             if (!p) {
                 card.style.display = 'none';
                 empty.style.display = 'block';
+                document.getElementById('heroGreetEmpty').innerText = greetingText();
                 document.getElementById('termEmptyText').innerText = data[currentLang].termEmpty;
                 return;
             }
 
             empty.style.display = 'none';
             card.style.display = 'block';
+            document.getElementById('heroGreet').innerText = greetingText();
 
             const t = data[currentLang];
             document.getElementById('termWeek').innerText = t.goingWeek.replace('{n}', p.week + 1);
@@ -1193,7 +1247,11 @@
             document.getElementById('termSub').innerText =
                 p.trimester + ' ' + t.trimesterWord + ' • ' + t.fullWord + ' ' +
                 p.week + ' ' + t.weeksShort + ' ' + p.days + ' ' + t.daysShort;
-            document.getElementById('termBarFill').style.width = p.progress + '%';
+
+            renderWeekDots(p.week + 1);
+
+            const wk = BABY_WEEKS[Math.min(42, Math.max(5, p.week + 1))];
+            document.getElementById('heroFact').innerText = wk ? wk.fact : '';
         }
 
         // Добавляем срок в системный промпт, чтобы Аяла его учитывала
@@ -1451,6 +1509,8 @@ ${lines.join('\n')}
                 labelManualWeek: 'Полных недель:', labelManualDays: 'И дней:',
                 labelManualDate: 'На какую дату это сказали:',
                 goingWeek: 'Идёт {n}-я неделя', fullWord: 'полных',
+                greetMorning: 'Доброе утро', greetDay: 'Добрый день',
+                greetEvening: 'Добрый вечер', greetNight: 'Доброй ночи',
                 termSaved: 'Готово! Сейчас у тебя {w} нед. {d} дн. 💕',
                 termCleared: 'Срок не задан — заполни поля, чтобы приложение его посчитало.',
                 btnSaveDate: 'Сохранить дату',
@@ -1620,6 +1680,8 @@ ${lines.join('\n')}
                 labelManualWeek: 'Толық апта:', labelManualDays: 'Және күн:',
                 labelManualDate: 'Қай күні айтылды:',
                 goingWeek: '{n}-ші апта жүріп жатыр', fullWord: 'толық',
+                greetMorning: 'Қайырлы таң', greetDay: 'Қайырлы күн',
+                greetEvening: 'Қайырлы кеш', greetNight: 'Қайырлы түн',
                 termSaved: 'Дайын! Қазір мерзімің {w} апта {d} күн 💕',
                 termCleared: 'Мерзім белгіленбеген — қосымша санауы үшін өрістерді толтыр.',
                 btnSaveDate: 'Күнді сақтау',
@@ -1777,9 +1839,6 @@ ${lines.join('\n')}
             document.getElementById('langBtn').innerText = data[currentLang].btn;
             document.querySelectorAll('.back-btn').forEach(b => b.innerText = data[currentLang].back);
             document.getElementById('userInput').placeholder = data[currentLang].placeholder;
-
-            document.getElementById('welcomeTitle').innerText = data[currentLang].title;
-            document.getElementById('welcomeDesc').innerText = data[currentLang].desc;
             document.getElementById('menuAiTitle').innerText = data[currentLang].aiTitle;
             document.getElementById('menuAiDesc').innerText = data[currentLang].aiDesc;
             document.getElementById('menuCalcTitle').innerText = data[currentLang].calcTitle;
