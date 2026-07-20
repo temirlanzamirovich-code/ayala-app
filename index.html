@@ -170,6 +170,7 @@
         .baby-compare { background: #fdf2f8; border-radius: 16px; padding: 14px; margin-bottom: 10px; }
         .baby-compare-cap { font-size: 11px; color: #be5a7e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
         .baby-compare-val { font-size: 16px; font-weight: 600; color: #334155; line-height: 1.35; }
+        .baby-tap-hint { font-size: 10px; color: #cbd5e1; margin-top: 6px; letter-spacing: 0.3px; }
         .baby-fact { font-size: 14px; color: #64748b; line-height: 1.5; margin-top: 14px; padding-top: 14px; border-top: 1px solid #f1f5f9; }
 
         .kick-big { width: 190px; height: 190px; border-radius: 50%; border: none; margin: 10px auto 20px auto; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; background: linear-gradient(145deg, #ffc2d1, #ff8fa3); color: #fff; cursor: pointer; box-shadow: 0 10px 30px rgba(255,143,163,0.4); transition: transform 0.1s; }
@@ -449,14 +450,16 @@
                         </div>
                     </div>
 
-                    <div class="baby-compare">
+                    <div class="baby-compare" onclick="cycleHome()" style="cursor:pointer;">
                         <div class="baby-compare-cap" id="babyHomeCap">Как вещь под рукой</div>
                         <div class="baby-compare-val" id="babyHome"></div>
+                        <div class="baby-tap-hint" id="babyHomeHint">нажми, чтобы поменять</div>
                     </div>
 
-                    <div class="baby-compare" style="background: #fff7ed;">
-                        <div class="baby-compare-cap" style="color: #b45309;" id="babyKzCap">По-казахстански</div>
+                    <div class="baby-compare" style="background: #fff7ed; cursor:pointer;" onclick="cycleSecond()">
+                        <div class="baby-compare-cap" style="color: #b45309;" id="babyKzCap">Фрукт или овощ</div>
                         <div class="baby-compare-val" id="babyKz"></div>
+                        <div class="baby-tap-hint" id="babyKzHint">нажми, чтобы поменять</div>
                     </div>
 
                     <div class="baby-fact" id="babyFact"></div>
@@ -471,7 +474,7 @@
                     <div class="theme-chips" id="themeChips"></div>
                     <div class="theme-active" id="themeActive">
                         <span id="themeActiveText"></span>
-                        <button class="theme-reset" onclick="resetBabyTheme()" id="themeResetBtn">вернуть обычные</button>
+                        <button class="theme-reset" onclick="resetBabyTheme()" id="themeResetBtn">вернуть по умолчанию (фрукт)</button>
                     </div>
                 </div>
 
@@ -1403,10 +1406,11 @@
                     { title: 'Третий УЗИ-скрининг', from: 30, to: 34 }
                 ],
                 capLen: 'рост', capWeight: 'вес',
-                capHome: 'Как вещь под рукой', capKz: 'По-казахстански',
+                capHome: 'Как вещь под рукой', capKz: 'По-казахстански', capFruit: 'Фрукт или овощ',
+                tapHint: 'нажми, чтобы поменять',
                 themeLabel: 'Своя тема для сравнений',
                 themePlaceholder: 'космос, машины, коты...',
-                themeGo: 'Придумать', themeReset: 'вернуть обычные',
+                themeGo: 'Придумать', themeReset: 'вернуть по умолчанию (фрукт)',
                 themeActiveText: 'Тема: {t}',
                 themeThinking: 'придумываю...',
                 themeFailed: 'не получилось придумать — попробуй другую тему',
@@ -1536,10 +1540,11 @@
                     { title: 'Үшінші УДЗ скринингі', from: 30, to: 34 }
                 ],
                 capLen: 'бойы', capWeight: 'салмағы',
-                capHome: 'Қолдағы затпен салыстырсақ', capKz: 'Қазақша айтсақ',
+                capHome: 'Қолдағы затпен салыстырсақ', capKz: 'Қазақша айтсақ', capFruit: 'Жеміс не көкөніс',
+                tapHint: 'өзгерту үшін бас',
                 themeLabel: 'Салыстыруға өз тақырыбың',
                 themePlaceholder: 'ғарыш, көліктер, мысықтар...',
-                themeGo: 'Ойлап тап', themeReset: 'әдеттегісін қайтару',
+                themeGo: 'Ойлап тап', themeReset: 'әдепкіге қайтару (жеміс)',
                 themeActiveText: 'Тақырып: {t}',
                 themeThinking: 'ойлап жатырмын...',
                 themeFailed: 'ойлап табу мүмкін болмады — басқа тақырыпты байқап көр',
@@ -1692,7 +1697,8 @@
             document.getElementById('babyLenCap').innerText = data[currentLang].capLen;
             document.getElementById('babyWeightCap').innerText = data[currentLang].capWeight;
             document.getElementById('babyHomeCap').innerText = data[currentLang].capHome;
-            document.getElementById('babyKzCap').innerText = data[currentLang].capKz;
+            document.getElementById('babyHomeHint').innerText = data[currentLang].tapHint;
+            document.getElementById('babyKzHint').innerText = data[currentLang].tapHint;
             document.getElementById('babyNote').innerText = data[currentLang].babyNote;
             document.getElementById('themeLabel').innerText = data[currentLang].themeLabel;
             document.getElementById('themeInput').placeholder = data[currentLang].themePlaceholder;
@@ -1999,47 +2005,49 @@
         // МАЛЫШ ПО НЕДЕЛЯМ
         // ==========================================
         const BABY_WEEKS = {
-            5: { len: 0.2, w: 1, home: "кончик карандаша ✏️", kz: "маковое зёрнышко", fact: "Крошечное сердечко делает самые первые удары 💓" },
-            6: { len: 0.5, w: 1, home: "зёрнышко риса 🌾", kz: "бусина на браслете", fact: "Формируются зачатки глаз и ушек" },
-            7: { len: 1.0, w: 2, home: "ластик на карандаше", kz: "ноготок мизинца", fact: "Появляются ручки и ножки — пока как вёсельца" },
-            8: { len: 1.6, w: 3, home: "SIM-карта 📱", kz: "половинка курта", fact: "Начинает шевелиться, но ты этого ещё не чувствуешь" },
-            9: { len: 2.3, w: 5, home: "канцелярская скрепка 📎", kz: "колечко от ключей", fact: "На пальчиках закладываются будущие отпечатки" },
-            10: { len: 3.1, w: 8, home: "крышка от бутылки", kz: "шарик курта 🧀", fact: "Все главные органы уже заложены — дальше они растут" },
-            11: { len: 4.1, w: 14, home: "спичечный коробок 🔥", kz: "грецкий орех в скорлупе", fact: "Может икать и потягиваться" },
-            12: { len: 5.4, w: 20, home: "флешка 💾", kz: "баурсак 🍩", fact: "Открывает и закрывает кулачки 👐" },
-            13: { len: 7.4, w: 39, home: "зажигалка", kz: "чайная ложка с ручкой 🥄", fact: "Появляются голосовые связки — на будущее" },
-            14: { len: 8.7, w: 61, home: "банковская карта 💳", kz: "дно пиалы", fact: "Умеет хмуриться и морщить носик" },
-            15: { len: 10.1, w: 87, home: "компьютерная мышка 🖱️", kz: "кесе для чая ☕", fact: "Начинает слышать твой голос и стук сердца 👂" },
-            16: { len: 11.6, w: 108, home: "губная помада с футляром 💄", kz: "пиала целиком 🍵", fact: "Различает свет через стенку животика" },
-            17: { len: 13.0, w: 140, home: "ладонь взрослого 🤚", kz: "половник для сорпы", fact: "Появляется первый жирок — согревать себя" },
-            18: { len: 14.2, w: 190, home: "шариковая ручка 🖊️", kz: "тюбетейка сверху 🎩", fact: "Ты можешь впервые почувствовать шевеления 🦋" },
-            19: { len: 15.3, w: 240, home: "смартфон 📱", kz: "круглая лепёшка", fact: "Кожу покрывает защитная смазка" },
-            20: { len: 25.6, w: 300, home: "кухонный нож 🔪", kz: "домбра — до первого лада 🎵", fact: "Ровно половина пути пройдена ✨" },
-            21: { len: 26.7, w: 360, home: "обеденная тарелка 🍽️", kz: "круглый поднос", fact: "Пробует глотать — тренирует пищеварение" },
-            22: { len: 27.8, w: 430, home: "ноутбук по ширине 💻", kz: "казы на блюде", fact: "Появляются бровки и реснички" },
-            23: { len: 28.9, w: 501, home: "лист А4 по длинной стороне 📄", kz: "шанырак в юрте — спица", fact: "Реагирует на громкие звуки — может вздрогнуть" },
-            24: { len: 30.0, w: 600, home: "школьная линейка 📏", kz: "самса на противне", fact: "Лёгкие учатся дышать, пока «вхолостую»" },
-            25: { len: 34.6, w: 660, home: "клавиатура ⌨️", kz: "корпе, сложенное вдвое", fact: "Начинает различать твой голос среди других 💗" },
-            26: { len: 35.6, w: 760, home: "рулон бумажных полотенец", kz: "круглый казахский хлеб", fact: "Впервые приоткрывает глазки 👁️" },
-            27: { len: 36.6, w: 875, home: "кухонное полотенце 🧺", kz: "чапан — рукав", fact: "Появляются первые сны — фаза быстрого сна" },
-            28: { len: 37.6, w: 1005, home: "ноутбук по диагонали 💻", kz: "детская подушка", fact: "Узнаёт твой голос и успокаивается на него" },
-            29: { len: 38.6, w: 1153, home: "зонт в сложенном виде ☂️", kz: "саба для кумыса", fact: "Мозг растёт быстро, косточки крепнут" },
-            30: { len: 39.9, w: 1319, home: "клюшка для гольфа — ручка", kz: "крышка казана 🍲", fact: "Может сосать пальчик и трогать личико" },
-            31: { len: 41.1, w: 1502, home: "пакет молока в высоту 🥛", kz: "казан на четыре литра", fact: "Зрачки реагируют на свет" },
-            32: { len: 42.4, w: 1702, home: "диванная подушка 🛋️", kz: "круглый дастархан — треть", fact: "Обычно переворачивается головкой вниз" },
-            33: { len: 43.7, w: 1918, home: "рюкзак по высоте 🎒", kz: "бешбармак на большом блюде", fact: "Иммунитет получает твои антитела 🛡️" },
-            34: { len: 45.0, w: 2146, home: "гитара — гриф 🎸", kz: "домбра — половина 🎶", fact: "Ноготки дорастают до кончиков пальцев" },
-            35: { len: 46.2, w: 2383, home: "офисный стул — спинка", kz: "сырмак у порога", fact: "Почти всё место в животике занято — толчки чувствуются иначе" },
-            36: { len: 47.4, w: 2622, home: "противень для духовки", kz: "колыбель-бесик изнутри 🛏️", fact: "Считается почти доношенным 🌸" },
-            37: { len: 48.6, w: 2859, home: "ноутбук 17 дюймов 💻", kz: "подушка на тор", fact: "Готов к встрече с миром в любой день" },
-            38: { len: 49.8, w: 3083, home: "стандартная подушка 🛏️", kz: "бесик — во всю длину", fact: "Хватательный рефлекс уже сильный — схватит твой палец" },
-            39: { len: 50.7, w: 3288, home: "клавиатура с цифрами ⌨️", kz: "корпе для малыша", fact: "Набирает последние граммы перед родами" },
-            40: { len: 51.2, w: 3462, home: "дорожная сумка 🧳", kz: "одеяло-конверт на выписку 💕", fact: "Ждёт своего дня. Совсем скоро 💕" },
-            41: { len: 51.7, w: 3600, home: "гитарный чехол — ширина 🎸", kz: "бесик с матрасиком 🛏️", fact: "Просто не спешит — так бывает у многих, и это нормально 🌸" },
-            42: { len: 52.0, w: 3700, home: "дорожный чемодан ручной клади 🧳", kz: "готовое приданое малыша 💕", fact: "Врач будет наблюдать особенно внимательно — держись рядом с ним" },
+            5: { len: 0.2, w: 1, home: ["кончик карандаша ✏️","точка от ручки","головка булавки"], fruit: ["маковое зёрнышко","кунжутное семечко","семечко яблока"], kz: "маленькая бусина", fact: "Крошечное сердечко делает самые первые удары 💓" },
+            6: { len: 0.5, w: 1, home: ["зёрнышко риса 🌾","бусина браслета","капля воды 💧"], fruit: ["горошина","зёрнышко граната","семечко подсолнуха"], kz: "бусина на браслете", fact: "Формируются зачатки глаз и ушек" },
+            7: { len: 1.0, w: 2, home: ["ластик на карандаше","ноготок мизинца","мини-скрепка"], fruit: ["черника 🫐","ягода смородины","зёрнышко фасоли"], kz: "ноготок мизинца", fact: "Появляются ручки и ножки — пока как вёсельца" },
+            8: { len: 1.6, w: 3, home: ["SIM-карта 📱","монета 100 тг","прямоугольный ластик"], fruit: ["малина","виноградинка 🍇","олива"], kz: "половинка курта", fact: "Начинает шевелиться, но ты этого ещё не чувствуешь" },
+            9: { len: 2.3, w: 5, home: ["канцелярская скрепка 📎","колечко от ключей","ластик"], fruit: ["вишня 🍒","виноградина 🍇","олива"], kz: "крупная бусина", fact: "На пальчиках закладываются будущие отпечатки" },
+            10: { len: 3.1, w: 8, home: ["крышка от бутылки","монета 200 тг","ключ от домофона"], fruit: ["клубника 🍓","чернослив","инжир"], kz: "шарик курта 🧀", fact: "Все главные органы уже заложены — дальше они растут" },
+            11: { len: 4.1, w: 14, home: ["спичечный коробок 🔥","ключ от квартиры 🔑","зажим для бумаг"], fruit: ["инжир","абрикос","лайм"], kz: "грецкий орех", fact: "Может икать и потягиваться" },
+            12: { len: 5.4, w: 20, home: ["флешка 💾","пробка от термоса","тюбик помады 💄"], fruit: ["лайм 🍋","слива","мандарин 🍊"], kz: "баурсак 🍩", fact: "Открывает и закрывает кулачки 👐" },
+            13: { len: 7.4, w: 39, home: ["зажигалка","чайная ложка 🥄","визитка по диагонали"], fruit: ["лимон 🍋","персик 🍑","стручок гороха"], kz: "курт крупный", fact: "Появляются голосовые связки — на будущее" },
+            14: { len: 8.7, w: 61, home: ["банковская карта 💳","кусок мыла","пульт — треть"], fruit: ["персик 🍑","яблоко 🍎","лимон 🍋"], kz: "дно пиалы", fact: "Умеет хмуриться и морщить носик" },
+            15: { len: 10.1, w: 87, home: ["компьютерная мышка 🖱️","чехол для очков 👓","пачка чая"], fruit: ["яблоко 🍎","груша 🍐","апельсин 🍊"], kz: "кесе для чая ☕", fact: "Начинает слышать твой голос и стук сердца 👂" },
+            16: { len: 11.6, w: 108, home: ["губная помада с футляром 💄","смартфон по ширине 📱","кошелёк"], fruit: ["авокадо 🥑","груша 🍐","гранат"], kz: "пиала целиком 🍵", fact: "Различает свет через стенку животика" },
+            17: { len: 13.0, w: 140, home: ["ладонь взрослого 🤚","пульт от телевизора","кисть для лица"], fruit: ["гранат","репа","луковица 🧅"], kz: "половник для сорпы", fact: "Появляется первый жирок — согревать себя" },
+            18: { len: 14.2, w: 190, home: ["шариковая ручка 🖊️","расчёска","нож для масла"], fruit: ["сладкий перец 🫑","манго 🥭","огурец 🥒"], kz: "тюбетейка сверху 🎩", fact: "Ты можешь впервые почувствовать шевеления 🦋" },
+            19: { len: 15.3, w: 240, home: ["смартфон 📱","очки в футляре 👓","блокнот А6"], fruit: ["манго 🥭","помидор 🍅","небольшой початок кукурузы 🌽"], kz: "круглая лепёшка", fact: "Кожу покрывает защитная смазка" },
+            20: { len: 25.6, w: 300, home: ["кухонный нож 🔪","линейка 25 см 📏","туфля 40 размера 👞"], fruit: ["банан 🍌","морковь 🥕","початок кукурузы 🌽"], kz: "домбра — до первого лада 🎵", fact: "Ровно половина пути пройдена ✨" },
+            21: { len: 26.7, w: 360, home: ["обеденная тарелка 🍽️","планшет","разделочная доска"], fruit: ["морковь 🥕","банан 🍌","крупный гранат"], kz: "круглый поднос", fact: "Пробует глотать — тренирует пищеварение" },
+            22: { len: 27.8, w: 430, home: ["ноутбук по ширине 💻","сковорода 28 см 🍳","рулон фольги"], fruit: ["кокос 🥥","папайя","кабачок"], kz: "казы на блюде", fact: "Появляются бровки и реснички" },
+            23: { len: 28.9, w: 501, home: ["лист А4 по длинной стороне 📄","полотенце для рук","клавиатура — треть"], fruit: ["грейпфрут","баклажан 🍆","крупное манго 🥭"], kz: "шанырак — спица", fact: "Реагирует на громкие звуки — может вздрогнуть" },
+            24: { len: 30.0, w: 600, home: ["школьная линейка 📏","большая сковорода 🍳","лист А4 по диагонали"], fruit: ["початок кукурузы 🌽","папайя","маленькая дыня 🍈"], kz: "самса на противне", fact: "Лёгкие учатся дышать, пока «вхолостую»" },
+            25: { len: 34.6, w: 660, home: ["клавиатура ⌨️","рулон бумажных полотенец","складной зонт ☂️"], fruit: ["цветная капуста","брюква","крупная репа"], kz: "корпе, сложенное вдвое", fact: "Начинает различать твой голос среди других 💗" },
+            26: { len: 35.6, w: 760, home: ["рулон бумажных полотенец","кухонное полотенце 🧺","коробка от обуви"], fruit: ["кабачок","цукини","кочан салата 🥬"], kz: "круглый хлеб", fact: "Впервые приоткрывает глазки 👁️" },
+            27: { len: 36.6, w: 875, home: ["кухонное полотенце 🧺","ноутбук по диагонали 💻","гладильная доска — треть"], fruit: ["цветная капуста","брокколи 🥦","кочан салата 🥬"], kz: "чапан — рукав", fact: "Появляются первые сны — фаза быстрого сна" },
+            28: { len: 37.6, w: 1005, home: ["ноутбук по диагонали 💻","детская подушка 🛏️","школьный рюкзак 🎒"], fruit: ["баклажан 🍆","большой кабачок","капуста"], kz: "детская подушка", fact: "Узнаёт твой голос и успокаивается на него" },
+            29: { len: 38.6, w: 1153, home: ["сложенный зонт ☂️","гриф гитары 🎸","коробка для обуви"], fruit: ["тыква небольшая 🎃","кабачок крупный","дыня 🍈"], kz: "саба для кумыса", fact: "Мозг растёт быстро, косточки крепнут" },
+            30: { len: 39.9, w: 1319, home: ["крышка казана 🍲","сложенный плед","ручка клюшки"], fruit: ["капуста","дыня 🍈","кочан салата 🥬"], kz: "крышка казана 🍲", fact: "Может сосать пальчик и трогать личико" },
+            31: { len: 41.1, w: 1502, home: ["пакет молока в высоту 🥛","теннисная ракетка 🎾","стопка книг 📚"], fruit: ["кокос крупный 🥥","ананас 🍍","дыня 🍈"], kz: "казан на четыре литра", fact: "Зрачки реагируют на свет" },
+            32: { len: 42.4, w: 1702, home: ["диванная подушка 🛋️","противень для духовки","половина чемодана"], fruit: ["ананас 🍍","большая капуста","джекфрут"], kz: "дастархан — треть", fact: "Обычно переворачивается головкой вниз" },
+            33: { len: 43.7, w: 1918, home: ["рюкзак по высоте 🎒","половина гитары 🎸","сиденье офисного стула"], fruit: ["дыня 🍈","пучок сельдерея","ананас 🍍"], kz: "бешбармак на блюде", fact: "Иммунитет получает твои антитела 🛡️" },
+            34: { len: 45.0, w: 2146, home: ["гриф гитары 🎸","высота барного стула","руль самоката"], fruit: ["мускусная дыня 🍈","тыква 🎃","канталупа"], kz: "домбра — половина 🎶", fact: "Ноготки дорастают до кончиков пальцев" },
+            35: { len: 46.2, w: 2383, home: ["спинка офисного стула","ширина коврика для йоги 🧘","большая подушка"], fruit: ["медовая дыня 🍈","средняя тыква 🎃","крупный ананас 🍍"], kz: "сырмак у порога", fact: "Почти всё место занято — толчки чувствуются иначе" },
+            36: { len: 47.4, w: 2622, home: ["противень для духовки","походный рюкзак 🎒","стопка из трёх книг 📚"], fruit: ["салат романо 🥬","большая папайя","тыква 🎃"], kz: "бесик изнутри 🛏️", fact: "Считается почти доношенным 🌸" },
+            37: { len: 48.6, w: 2859, home: ["ноутбук 17 дюймов 💻","стандартная подушка 🛏️","корпус гитары 🎸"], fruit: ["мангольд 🥬","маленький арбуз 🍉","тыква 🎃"], kz: "подушка на тор", fact: "Готов к встрече с миром в любой день" },
+            38: { len: 49.8, w: 3083, home: ["стандартная подушка 🛏️","ширина коврика для йоги 🧘","противень духовки"], fruit: ["лук-порей","арбуз 🍉","крупная тыква 🎃"], kz: "бесик во всю длину", fact: "Хватательный рефлекс сильный — схватит твой палец" },
+            39: { len: 50.7, w: 3288, home: ["клавиатура с цифрами ⌨️","дорожная сумка 🧳","плед, сложенный вдвое"], fruit: ["маленький арбуз 🍉","тыква 🎃","джекфрут"], kz: "корпе для малыша", fact: "Набирает последние граммы перед родами" },
+            40: { len: 51.2, w: 3462, home: ["дорожная сумка 🧳","подушка с наволочкой 🛏️","большой рюкзак 🎒"], fruit: ["тыква 🎃","арбуз 🍉","джекфрут"], kz: "одеяло-конверт на выписку 💕", fact: "Ждёт своего дня. Совсем скоро 💕" },
+            41: { len: 51.7, w: 3600, home: ["чехол от гитары — ширина 🎸","чемодан ручной клади 🧳","большая подушка 🛏️"], fruit: ["крупный арбуз 🍉","большая тыква 🎃","джекфрут"], kz: "бесик с матрасиком 🛏️", fact: "Просто не спешит — так бывает у многих, и это нормально 🌸" },
+            42: { len: 52.0, w: 3700, home: ["дорожный чемодан 🧳","ширина коврика для йоги 🧘","детский плед"], fruit: ["арбуз 🍉","большая тыква 🎃","крупный джекфрут"], kz: "готовое приданое малыша 💕", fact: "Врач будет наблюдать особенно внимательно — держись рядом с ним" },
         };
 
         let babyViewWeek = null;
+        let homeIdx = 0;      // какой из бытовых вариантов показан
+        let secondIdx = 0;    // какой вариант во второй карточке
 
         // ==========================================
         // СВОЯ ТЕМА ДЛЯ СРАВНЕНИЙ (генерирует ИИ)
@@ -2047,6 +2055,7 @@
         const THEME_KEY = 'ayala_baby_theme';
         const THEME_CACHE_KEY = 'ayala_baby_theme_cache';
         let themeRequestId = 0;   // защита от гонки при быстром листании недель
+        let themeVarIdx = 0;      // какой по счёту вариант темы показан
 
         function getBabyTheme() { return localStorage.getItem(THEME_KEY) || ''; }
 
@@ -2066,6 +2075,7 @@
             if (!theme) { alert(data[currentLang].themeEmpty); return; }
             if (theme.length > 40) { alert(data[currentLang].themeTooLong); return; }
             localStorage.setItem(THEME_KEY, theme);
+            themeVarIdx = 0;
             renderBabyWeek();
         }
 
@@ -2077,6 +2087,8 @@
         function resetBabyTheme() {
             localStorage.removeItem(THEME_KEY);
             document.getElementById('themeInput').value = '';
+            themeVarIdx = 0;
+            secondIdx = 0;
             renderBabyWeek();
         }
 
@@ -2093,7 +2105,7 @@
         }
 
         // Просим модель придумать предмет ровно нужной длины
-        async function fetchThemeComparison(theme, week) {
+        async function fetchThemeComparison(theme, week, avoid) {
             const d = BABY_WEEKS[week];
             const apiKey = getApiKey();
             if (!apiKey) throw new Error('no-key');
@@ -2108,7 +2120,10 @@
 1. Предмет должен реально быть примерно ${d.len} см в длину — это самое важное. Не бери предметы заметно больше или меньше.
 2. Ответь одной короткой строкой на ${langName} языке: название предмета и, если уместно, один эмодзи.
 3. Без пояснений, без кавычек, без точки в конце, без слова «размером».
-4. Если тема жестокая, пугающая или неуместная для беременной женщины — ответь одним символом: -`;
+4. Если тема жестокая, пугающая или неуместная для беременной женщины — ответь одним символом: -
+5. Сравнение должно быть ЯВНО связано с темой "${theme}", а не любым случайным предметом.
+6. Не повторяй саму тему как ответ — назови конкретный предмет из неё.` +
+                (avoid && avoid.length ? `\n7. Такие варианты уже были, придумай ДРУГОЙ: ${avoid.join(', ')}` : '');
 
             const model = getModel();
             const body = {
@@ -2158,6 +2173,43 @@
             return out;
         }
 
+        function themeKey(theme, week) {
+            return theme.toLowerCase() + '||' + week + '||' + currentLang;
+        }
+
+        // Нажатие на карточку темы: следующий вариант или новый от ИИ
+        async function nextThemeVariant() {
+            const theme = getBabyTheme();
+            const week = babyViewWeek;
+            const valEl = document.getElementById('babyKz');
+            const t = data[currentLang];
+
+            const cache = getThemeCache();
+            const key = themeKey(theme, week);
+            const list = Array.isArray(cache[key]) ? cache[key] : (cache[key] ? [cache[key]] : []);
+
+            themeVarIdx++;
+            if (themeVarIdx < list.length) { valEl.innerText = list[themeVarIdx]; return; }
+            if (list.length >= 5) { themeVarIdx = 0; valEl.innerText = list[0]; return; }
+
+            const myId = ++themeRequestId;
+            valEl.innerText = t.themeThinking;
+            try {
+                const result = await fetchThemeComparison(theme, week, list);
+                if (myId !== themeRequestId) return;
+                list.push(result);
+                cache[key] = list;
+                saveThemeCache(cache);
+                themeVarIdx = list.length - 1;
+                valEl.innerText = result;
+            } catch (e) {
+                if (myId !== themeRequestId) return;
+                console.error('Новый вариант не сгенерировался:', e);
+                themeVarIdx = Math.max(0, list.length - 1);
+                valEl.innerText = list.length ? list[themeVarIdx] : t.themeFailed;
+            }
+        }
+
         // Показ темы: берём из кеша, иначе просим модель
         async function renderThemeCompare(week) {
             const theme = getBabyTheme();
@@ -2168,8 +2220,7 @@
 
             if (!theme) {
                 activeEl.style.display = 'none';
-                capEl.innerText = t.capKz;
-                valEl.innerText = BABY_WEEKS[week].kz;
+                renderSecondCard();
                 return;
             }
 
@@ -2178,16 +2229,17 @@
             capEl.innerText = theme;
 
             const cache = getThemeCache();
-            const key = theme.toLowerCase() + '||' + week + '||' + currentLang;
-            if (cache[key]) { valEl.innerText = cache[key]; return; }
+            const key = themeKey(theme, week);
+            const list = Array.isArray(cache[key]) ? cache[key] : (cache[key] ? [cache[key]] : []);
+            if (list.length) { valEl.innerText = list[themeVarIdx % list.length]; return; }
 
             const myId = ++themeRequestId;
             valEl.innerText = t.themeThinking;
 
             try {
-                const result = await fetchThemeComparison(theme, week);
+                const result = await fetchThemeComparison(theme, week, []);
                 if (myId !== themeRequestId) return;      // пользователь уже пролистал дальше
-                cache[key] = result;
+                cache[key] = [result];
                 saveThemeCache(cache);
                 valEl.innerText = result;
             } catch (e) {
@@ -2201,7 +2253,14 @@
 
         function openBabyScreen() {
             renderThemeChips();
-            document.getElementById('themeInput').value = getBabyTheme();
+            const ti = document.getElementById('themeInput');
+            ti.value = getBabyTheme();
+            if (!ti.dataset.bound) {
+                ti.dataset.bound = '1';
+                ti.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); applyBabyTheme(); }
+                });
+            }
             const p = calcPregnancy();
             babyViewWeek = p ? Math.min(42, Math.max(5, p.week + 1)) : 20;
             renderBabyWeek();
@@ -2210,7 +2269,45 @@
 
         function changeBabyWeek(delta) {
             babyViewWeek = Math.min(42, Math.max(5, babyViewWeek + delta));
+            homeIdx = 0;
+            secondIdx = 0;
+            themeVarIdx = 0;
             renderBabyWeek();
+        }
+
+        function cycleHome() {
+            const d = BABY_WEEKS[babyViewWeek];
+            if (!d) return;
+            const homes = Array.isArray(d.home) ? d.home : [d.home];
+            homeIdx = (homeIdx + 1) % homes.length;
+            document.getElementById('babyHome').innerText = homes[homeIdx];
+        }
+
+        // Вторая карточка: фрукты, потом казахстанское сравнение.
+        // Если задана своя тема — просим у ИИ следующий вариант.
+        function cycleSecond() {
+            if (getBabyTheme()) { nextThemeVariant(); return; }
+            const d = BABY_WEEKS[babyViewWeek];
+            if (!d) return;
+            const total = (d.fruit ? d.fruit.length : 0) + 1;
+            secondIdx = (secondIdx + 1) % total;
+            renderSecondCard();
+        }
+
+        function renderSecondCard() {
+            const d = BABY_WEEKS[babyViewWeek];
+            const t = data[currentLang];
+            const fruits = d.fruit || [];
+            const capEl = document.getElementById('babyKzCap');
+            const valEl = document.getElementById('babyKz');
+
+            if (secondIdx < fruits.length) {
+                capEl.innerText = t.capFruit;
+                valEl.innerText = fruits[secondIdx];
+            } else {
+                capEl.innerText = t.capKz;
+                valEl.innerText = d.kz;
+            }
         }
 
         function renderBabyWeek() {
@@ -2221,7 +2318,8 @@
             document.getElementById('babyWeekLabel').innerText = babyViewWeek + ' ' + t.weekWord;
             document.getElementById('babyLen').innerText = d.len + ' см';
             document.getElementById('babyWeight').innerText = d.w < 1000 ? d.w + ' г' : (d.w / 1000).toFixed(1) + ' кг';
-            document.getElementById('babyHome').innerText = d.home;
+            const homes = Array.isArray(d.home) ? d.home : [d.home];
+            document.getElementById('babyHome').innerText = homes[homeIdx % homes.length];
             document.getElementById('babyFact').innerText = d.fact;
             renderThemeCompare(babyViewWeek);
 
