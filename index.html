@@ -700,6 +700,37 @@
                 </div>
 
                 <div class="input-group" style="margin-top: 20px;">
+                    <label id="labelTermMode">Как считаем срок:</label>
+                    <select class="calc-input" id="term-mode" onchange="onTermModeChange()">
+                        <option value="lmp" id="optLmp">По первому дню последних месячных</option>
+                        <option value="manual" id="optManual">Указать неделю вручную</option>
+                        <option value="due" id="optDue">По дате родов (ПДР)</option>
+                    </select>
+                </div>
+
+                <div class="input-group" id="termLmpBlock" style="margin-top: 14px;">
+                    <label id="labelLmpDate">Первый день последних месячных:</label>
+                    <input type="date" class="calc-input" id="lmp-date-input">
+                </div>
+
+                <div id="termManualBlock" style="display: none; margin-top: 14px;">
+                    <div class="plan-form-row">
+                        <div class="input-group">
+                            <label id="labelManualWeek">Полных недель:</label>
+                            <input type="number" class="calc-input" id="manual-week" min="1" max="42" placeholder="36">
+                        </div>
+                        <div class="input-group">
+                            <label id="labelManualDays">И дней:</label>
+                            <input type="number" class="calc-input" id="manual-days" min="0" max="6" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin-top: 10px;">
+                        <label id="labelManualDate">На какую дату это сказали:</label>
+                        <input type="date" class="calc-input" id="manual-date">
+                    </div>
+                </div>
+
+                <div class="input-group" id="termDueBlock" style="display: none; margin-top: 14px;">
                     <label id="labelDueDate">Предполагаемая дата родов (ПДР):</label>
                     <input type="date" class="calc-input" id="due-date-input">
                 </div>
@@ -812,35 +843,99 @@
         // ==========================================
         const DUE_DATE_KEY = 'ayala_due_date';
 
+        const TERM_MODE_KEY = 'ayala_term_mode';
+        const LMP_KEY = 'ayala_lmp_date';
+        const MANUAL_KEY = 'ayala_manual_term';
+
         function getDueDate() {
             return localStorage.getItem(DUE_DATE_KEY) || '';
         }
 
+        function getTermMode() {
+            const m = localStorage.getItem(TERM_MODE_KEY);
+            if (m) return m;
+            return getDueDate() ? 'due' : 'lmp';   // у кого уже стоит ПДР — не ломаем
+        }
+
+        function onTermModeChange() {
+            const mode = document.getElementById('term-mode').value;
+            document.getElementById('termLmpBlock').style.display = mode === 'lmp' ? 'flex' : 'none';
+            document.getElementById('termManualBlock').style.display = mode === 'manual' ? 'block' : 'none';
+            document.getElementById('termDueBlock').style.display = mode === 'due' ? 'flex' : 'none';
+        }
+
+        function getManualTerm() {
+            try {
+                const v = JSON.parse(localStorage.getItem(MANUAL_KEY));
+                return (v && v.date) ? v : null;
+            } catch (e) { return null; }
+        }
+
+        // сколько дней прошло от даты до сегодня
+        function daysSince(dateStr) {
+            const from = new Date(dateStr + 'T00:00:00').getTime();
+            if (isNaN(from)) return null;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return Math.round((today.getTime() - from) / 86400000);
+        }
+
         function saveDueDate() {
-            const value = document.getElementById('due-date-input').value;
-            if (value) {
-                localStorage.setItem(DUE_DATE_KEY, value);
-                alert(currentLang === 'ru' ? 'Дата сохранена!' : 'Күн сақталды!');
+            const mode = document.getElementById('term-mode').value;
+            localStorage.setItem(TERM_MODE_KEY, mode);
+
+            if (mode === 'due') {
+                const v = document.getElementById('due-date-input').value;
+                if (v) localStorage.setItem(DUE_DATE_KEY, v); else localStorage.removeItem(DUE_DATE_KEY);
+            } else if (mode === 'lmp') {
+                const v = document.getElementById('lmp-date-input').value;
+                if (v) localStorage.setItem(LMP_KEY, v); else localStorage.removeItem(LMP_KEY);
             } else {
-                localStorage.removeItem(DUE_DATE_KEY);
-                alert(currentLang === 'ru' ? 'Дата удалена.' : 'Күн өшірілді.');
+                const w = parseInt(document.getElementById('manual-week').value, 10);
+                const d = parseInt(document.getElementById('manual-days').value, 10) || 0;
+                const date = document.getElementById('manual-date').value || new Date().toISOString().slice(0, 10);
+                if (!isNaN(w)) {
+                    localStorage.setItem(MANUAL_KEY, JSON.stringify({ week: w, days: d, date: date }));
+                } else {
+                    localStorage.removeItem(MANUAL_KEY);
+                }
             }
+
             renderTermCard();
+            const p = calcPregnancy();
+            alert(p ? data[currentLang].termSaved.replace('{w}', p.week).replace('{d}', p.days)
+                    : data[currentLang].termCleared);
         }
 
         // Считаем акушерский срок: беременность = 280 дней до ПДР
         function calcPregnancy() {
-            const due = getDueDate();
-            if (!due) return null;
+            const mode = getTermMode();
+            let totalDays = null;
 
-            const dueMs = new Date(due + 'T00:00:00').getTime();
-            if (isNaN(dueMs)) return null;
+            if (mode === 'lmp') {
+                // акушерский срок и есть время от первого дня последних месячных
+                const lmp = localStorage.getItem(LMP_KEY);
+                if (!lmp) return null;
+                totalDays = daysSince(lmp);
+            } else if (mode === 'manual') {
+                // врач назвал срок на конкретную дату — дальше отсчитываем сами
+                const m = getManualTerm();
+                if (!m) return null;
+                const passed = daysSince(m.date);
+                if (passed === null) return null;
+                totalDays = m.week * 7 + (m.days || 0) + passed;
+            } else {
+                const due = getDueDate();
+                if (!due) return null;
+                const dueMs = new Date(due + 'T00:00:00').getTime();
+                if (isNaN(dueMs)) return null;
+                const today0 = new Date();
+                today0.setHours(0, 0, 0, 0);
+                totalDays = 280 - Math.round((dueMs - today0.getTime()) / 86400000);
+            }
 
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            const daysLeft = Math.round((dueMs - today.getTime()) / 86400000);
-            const totalDays = 280 - daysLeft;
+            if (totalDays === null || isNaN(totalDays)) return null;
+            const daysLeft = 280 - totalDays;
 
             // защита от бессмысленных дат (опечатка в годе и т.п.)
             if (totalDays < 0 || totalDays > 315) return null;
@@ -869,7 +964,7 @@
             card.style.display = 'block';
 
             const t = data[currentLang];
-            document.getElementById('termWeek').innerText = (p.week + 1) + ' ' + t.weekWord;
+            document.getElementById('termWeek').innerText = t.goingWeek.replace('{n}', p.week + 1);
 
             if (p.daysLeft > 0) {
                 const weeksLeft = Math.ceil(p.daysLeft / 7);
@@ -883,7 +978,8 @@
             }
 
             document.getElementById('termSub').innerText =
-                p.trimester + ' ' + t.trimesterWord + ' • ' + p.week + ' ' + t.weeksShort + ' ' + p.days + ' ' + t.daysShort;
+                p.trimester + ' ' + t.trimesterWord + ' • ' + t.fullWord + ' ' +
+                p.week + ' ' + t.weeksShort + ' ' + p.days + ' ' + t.daysShort;
             document.getElementById('termBarFill').style.width = p.progress + '%';
         }
 
@@ -1188,6 +1284,16 @@
                 leftWord: 'осталось', leftSuffix: '', soonWord: 'уже совсем скоро! 💕',
                 trimesterWord: 'триместр',
                 labelDueDate: 'Предполагаемая дата родов (ПДР):',
+                labelTermMode: 'Как считаем срок:',
+                optLmp: 'По первому дню последних месячных',
+                optManual: 'Указать неделю вручную',
+                optDue: 'По дате родов (ПДР)',
+                labelLmpDate: 'Первый день последних месячных:',
+                labelManualWeek: 'Полных недель:', labelManualDays: 'И дней:',
+                labelManualDate: 'На какую дату это сказали:',
+                goingWeek: 'Идёт {n}-я неделя', fullWord: 'полных',
+                termSaved: 'Готово! Сейчас у тебя {w} нед. {d} дн. 💕',
+                termCleared: 'Срок не задан — заполни поля, чтобы приложение его посчитало.',
                 btnSaveDate: 'Сохранить дату',
                 dueDateHelp: 'Эту дату ставит врач в женской консультации. Зная её, приложение само посчитает твою неделю, а Аяла будет учитывать срок в ответах.',
                 newChatBtn: 'Новый',
@@ -1302,6 +1408,16 @@
                 leftWord: '', leftSuffix: 'қалды', soonWord: 'жақында кездесесіңдер! 💕',
                 trimesterWord: 'триместр',
                 labelDueDate: 'Болжамды босану күні (ББК):',
+                labelTermMode: 'Мерзімді қалай санаймыз:',
+                optLmp: 'Соңғы етеккірдің бірінші күні бойынша',
+                optManual: 'Аптаны қолмен көрсету',
+                optDue: 'Босану күні (ББК) бойынша',
+                labelLmpDate: 'Соңғы етеккірдің бірінші күні:',
+                labelManualWeek: 'Толық апта:', labelManualDays: 'Және күн:',
+                labelManualDate: 'Қай күні айтылды:',
+                goingWeek: '{n}-ші апта жүріп жатыр', fullWord: 'толық',
+                termSaved: 'Дайын! Қазір мерзімің {w} апта {d} күн 💕',
+                termCleared: 'Мерзім белгіленбеген — қосымша санауы үшін өрістерді толтыр.',
                 btnSaveDate: 'Күнді сақтау',
                 dueDateHelp: 'Бұл күнді әйелдер кеңесіндегі дәрігер қояды. Оны білсе, қосымша аптаңды өзі санайды, ал Аяла жауаптарында мерзімді ескереді.',
                 newChatBtn: 'Жаңа',
@@ -1451,6 +1567,14 @@
 
             // Перевод блока срока
             document.getElementById('labelDueDate').innerText = data[currentLang].labelDueDate;
+            document.getElementById('labelTermMode').innerText = data[currentLang].labelTermMode;
+            document.getElementById('optLmp').innerText = data[currentLang].optLmp;
+            document.getElementById('optManual').innerText = data[currentLang].optManual;
+            document.getElementById('optDue').innerText = data[currentLang].optDue;
+            document.getElementById('labelLmpDate').innerText = data[currentLang].labelLmpDate;
+            document.getElementById('labelManualWeek').innerText = data[currentLang].labelManualWeek;
+            document.getElementById('labelManualDays').innerText = data[currentLang].labelManualDays;
+            document.getElementById('labelManualDate').innerText = data[currentLang].labelManualDate;
             document.getElementById('btnSaveDate').innerText = data[currentLang].btnSaveDate;
             document.getElementById('dueDateHelp').innerText = data[currentLang].dueDateHelp;
             document.getElementById('chatsHeaderTitle').innerText = data[currentLang].chatsHead;
@@ -2850,9 +2974,19 @@
                 document.getElementById('api-key-input').value = savedKey;
             }
             const savedDue = getDueDate();
-            if (savedDue) {
-                document.getElementById('due-date-input').value = savedDue;
+            if (savedDue) document.getElementById('due-date-input').value = savedDue;
+            const savedLmp = localStorage.getItem(LMP_KEY);
+            if (savedLmp) document.getElementById('lmp-date-input').value = savedLmp;
+            const savedManual = getManualTerm();
+            if (savedManual) {
+                document.getElementById('manual-week').value = savedManual.week;
+                document.getElementById('manual-days').value = savedManual.days || 0;
+                document.getElementById('manual-date').value = savedManual.date;
+            } else {
+                document.getElementById('manual-date').value = new Date().toISOString().slice(0, 10);
             }
+            document.getElementById('term-mode').value = getTermMode();
+            onTermModeChange();
             document.getElementById('model-select').value = getModel();
             const savedGender = getGender();
             if (savedGender) {
