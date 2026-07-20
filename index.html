@@ -1712,6 +1712,12 @@
             document.getElementById('resultCard').style.display = 'flex';
         }
 
+        // ==========================================
+        // СИСТЕМА ЧАТОВ (несколько диалогов, как в ChatGPT)
+        // ==========================================
+        const CHATS_KEY = 'ayala_chats';
+        const ACTIVE_CHAT_KEY = 'ayala_active_chat';
+
         function getChats() {
             try {
                 const v = JSON.parse(localStorage.getItem(CHATS_KEY));
